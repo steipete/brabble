@@ -2,14 +2,19 @@
   "name": "brabble",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "go build -o bin/brabble ./cmd/brabble",
     "start": "pnpm run build && ./bin/brabble start",
-    "brabble": "pnpm run build && ./bin/brabble serve",
+    "brabble": "node ./scripts/brabble.js",
     "stop": "./bin/brabble stop",
     "restart": "./bin/brabble restart",
     "lint": "golangci-lint run",
     "format": "gofmt -w .",
     "test": "go test ./..."
+  },
+  "devDependencies": {
+    "chalk": "^5.3.0",
+    "execa": "^8.0.1"
   }
 }
