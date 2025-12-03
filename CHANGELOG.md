@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Real microphone enumeration via `list-mics`; `set-mic` now meaningful.
 - Updated README and spec to document build/deps (`brew install portaudio`, model download, whisper tag).
 - `doctor` command to verify config/model/hook and PortAudio (when whisper build).
+- `install-service` to write a user launchd plist; `setup` to fetch default model.
+- Hook queue with drop-on-full, metrics endpoint (`/metrics`) optional via config, JSON output for `status` and `list-mics`.
 
 ## [0.1.0] - 2025-12-03
 ### Added

@@ -20,7 +20,7 @@ import (
 
 // NewStatusCmd queries daemon status.
 func NewStatusCmd(cfgPath *string) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "status",
 		Short: "Show daemon status",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -41,6 +41,10 @@ func NewStatusCmd(cfgPath *string) *cobra.Command {
 			if err := json.NewDecoder(conn).Decode(&status); err != nil {
 				return err
 			}
+			jsonOut, _ := cmd.Flags().GetBool("json")
+			if jsonOut {
+				return json.NewEncoder(cmd.OutOrStdout()).Encode(status)
+			}
 			fmt.Printf("running: %v\nuptime: %.1fs\n", status.Running, status.UptimeSec)
 			for _, t := range status.Transcripts {
 				fmt.Printf("%s  %s\n", t.Timestamp.Format("15:04:05"), t.Text)
@@ -48,6 +52,8 @@ func NewStatusCmd(cfgPath *string) *cobra.Command {
 			return nil
 		},
 	}
+	cmd.Flags().Bool("json", false, "output JSON")
+	return cmd
 }
 
 // NewTailLogCmd tails the main log file (simple last N lines).

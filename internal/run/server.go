@@ -30,6 +30,9 @@ type Server struct {
 
 	transcriptsMu sync.Mutex
 	transcripts   []control.Transcript
+
+	metrics metrics
+	hookCh  chan hook.Job
 }
 
 // Serve runs the daemon until interrupted.
@@ -46,18 +49,28 @@ func Serve(cfg *config.Config, logger *logrus.Logger) error {
 	_ = os.Remove(cfg.Paths.SocketPath)
 
 	srv := &Server{
-		cfg:       cfg,
-		logger:    logger,
-		hook:      hook.NewRunner(cfg, logger),
-		startedAt: time.Now(),
+		cfg:         cfg,
+		logger:      logger,
+		hook:        hook.NewRunner(cfg, logger),
+		startedAt:   time.Now(),
 		transcripts: make([]control.Transcript, 0, cfg.UI.StatusTail),
+		hookCh:      make(chan hook.Job, max(1, cfg.Hook.QueueSize)),
 	}
+	srv.metrics.reset()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// Control socket
 	go srv.controlLoop(ctx)
+
+	// Hook worker
+	go srv.hookWorker(ctx)
+
+	// Metrics server
+	if cfg.Metrics.Enabled {
+		go srv.metricsServe(ctx.Done(), cfg.Metrics.Addr, logger)
+	}
 
 	// Audio/ASR loop
 	go srv.asrLoop(ctx)
@@ -104,6 +117,7 @@ func (s *Server) handleSegment(ctx context.Context, seg asr.Segment) {
 	if text == "" {
 		return
 	}
+	s.metrics.incHeard()
 	s.logger.Infof("heard: %q", text)
 	s.recordTranscript(text)
 	if s.cfg.Wake.Enabled && !strings.Contains(strings.ToLower(text), strings.ToLower(s.cfg.Wake.Word)) {
@@ -118,17 +132,19 @@ func (s *Server) handleSegment(ctx context.Context, seg asr.Segment) {
 	}
 	if !s.hook.ShouldRun() {
 		s.logger.Debug("hook skipped (cooldown)")
+		s.metrics.incSkipped()
 		return
 	}
 	job := hook.Job{
 		Text:      text,
 		Timestamp: time.Now(),
 	}
-	go func() {
-		if err := s.hook.Run(ctx, job); err != nil {
-			s.logger.Errorf("hook: %v", err)
-		}
-	}()
+	select {
+	case s.hookCh <- job:
+	default:
+		s.metrics.incDropped()
+		s.logger.Warn("hook queue full, dropping job")
+	}
 }
 
 func removeWakeWord(text, word string) string {
@@ -202,8 +218,8 @@ func (s *Server) handleConn(ctx context.Context, conn net.Conn) {
 	switch req.Op {
 	case "status":
 		resp := control.Status{
-			Running:    true,
-			UptimeSec:  time.Since(s.startedAt).Seconds(),
+			Running:     true,
+			UptimeSec:   time.Since(s.startedAt).Seconds(),
 			Transcripts: s.copyTranscripts(),
 		}
 		_ = json.NewEncoder(conn).Encode(resp)

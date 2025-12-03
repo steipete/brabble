@@ -27,6 +27,7 @@ Local, always-on voice daemon for macOS. Listens for a wake word (“clawd” by
 - `test-hook "text"` — invoke hook manually.
 - `doctor` — check config, model path, warelay, PortAudio (whisper build).
 - `install-service` — write a user launchd plist (macOS) for autostart.
+- `setup` — download default whisper model if missing.
 
 ## CI
 - GitHub Actions: lint (`golangci-lint`), `go test` (stub build), macOS whisper build (PortAudio).

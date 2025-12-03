@@ -59,6 +59,7 @@ type Config struct {
 		CooldownSec   float64  `toml:"cooldown_sec"`
 		MinChars      int      `toml:"min_chars"`
 		MaxLatencyMS  int      `toml:"max_latency_ms"`
+		QueueSize     int      `toml:"queue_size"`
 		Env           map[string]string `toml:"env"`
 	} `toml:"hook"`
 
@@ -74,6 +75,11 @@ type Config struct {
 	UI struct {
 		StatusTail int `toml:"status_tail"`
 	} `toml:"ui"`
+
+	Metrics struct {
+		Enabled bool   `toml:"enabled"`
+		Addr    string `toml:"addr"`
+	} `toml:"metrics"`
 }
 
 // Default returns Config populated with defaults.
@@ -117,6 +123,7 @@ func Default() (*Config, error) {
 	cfg.Hook.CooldownSec = defaultCooldown
 	cfg.Hook.MinChars = defaultMinChars
 	cfg.Hook.MaxLatencyMS = 5000
+	cfg.Hook.QueueSize = 16
 	cfg.Hook.Env = map[string]string{}
 
 	cfg.Paths.StateDir = stateDir
@@ -126,6 +133,9 @@ func Default() (*Config, error) {
 	cfg.Paths.PidPath = filepath.Join(stateDir, "brabble.pid")
 
 	cfg.UI.StatusTail = defaultStatusTail
+
+	cfg.Metrics.Enabled = false
+	cfg.Metrics.Addr = "127.0.0.1:9317"
 
 	return cfg, nil
 }
