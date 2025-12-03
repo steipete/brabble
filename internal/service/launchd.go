@@ -44,6 +44,11 @@ type LaunchdParams struct {
 	Env    map[string]string
 }
 
+// LaunchdPath returns the plist path for a label.
+func LaunchdPath(label string) string {
+	return filepath.Join(os.Getenv("HOME"), "Library", "LaunchAgents", fmt.Sprintf("%s.plist", label))
+}
+
 // WritePlist writes a user-level launchd plist.
 func WritePlist(params LaunchdParams) (string, error) {
 	if err := os.MkdirAll(filepath.Dir(params.Config), 0o755); err != nil {
