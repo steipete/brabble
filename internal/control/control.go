@@ -12,6 +12,11 @@ type Status struct {
 	Transcripts []Transcript `json:"transcripts"`
 }
 
+type SimpleResponse struct {
+	OK      bool   `json:"ok"`
+	Message string `json:"message"`
+}
+
 type Transcript struct {
 	Text      string    `json:"text"`
 	Timestamp time.Time `json:"timestamp"`

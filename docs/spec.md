@@ -110,6 +110,8 @@ Rules:
 - launchd helper writes a user plist for autostart on macOS.
 - CI: GitHub Actions runs lint/test on Linux and whisper-tag build on macOS with PortAudio installed.
 - Setup command fetches default whisper model if missing.
+- Reload command refreshes hook/wake config at runtime (audio settings still need restart).
+- Optional `/metrics` endpoint (Prometheus text) gated by config.
 
 ## Audio & ASR Implementation Notes (to be filled)
 - Replace stdin stub by implementing `internal/asr/whisper_whisper.go` using whisper.cpp Go bindings; build with `-tags whisper`.

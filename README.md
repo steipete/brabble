@@ -28,6 +28,7 @@ Local, always-on voice daemon for macOS. Listens for a wake word (“clawd” by
 - `doctor` — check config, model path, warelay, PortAudio (whisper build).
 - `install-service` — write a user launchd plist (macOS) for autostart.
 - `setup` — download default whisper model if missing.
+- `reload` — reload config in the running daemon (hook/wake settings).
 
 ## CI
 - GitHub Actions: lint (`golangci-lint`), `go test` (stub build), macOS whisper build (PortAudio).
@@ -83,6 +84,7 @@ State/logs live under `~/Library/Application Support/brabble/` (socket, pid, log
 - Wake word must be present; removed before sending hook.
 - Transcripts are tailed by `status`; logs rotate (20 MB, 3 backups, 30 days).
 - Default build uses stdin as mic; whisper build uses PortAudio + VAD + whisper.cpp.
+- Metrics: optional Prometheus-style endpoint at `/metrics` when enabled in config.
 
 ## Roadmap
 - Optional Silero VAD (onnxruntime) and Porcupine wake front-end.
