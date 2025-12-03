@@ -176,6 +176,9 @@ func stripPunct(s string) string {
 }
 
 func (s *Server) recordTranscript(text string) {
+	if !s.cfg.Transcripts.Enabled {
+		return
+	}
 	entry := control.Transcript{
 		Text:      text,
 		Timestamp: time.Now(),

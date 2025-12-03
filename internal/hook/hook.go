@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -62,7 +63,11 @@ func (r *Runner) Run(ctx context.Context, job Job) error {
 	args := append([]string{}, r.cfg.Hook.Args...)
 
 	prefix := strings.ReplaceAll(r.cfg.Hook.Prefix, "${hostname}", r.hostname)
-	payload := strings.TrimSpace(prefix + job.Text)
+	text := job.Text
+	if r.cfg.Hook.RedactPII {
+		text = redactPII(text)
+	}
+	payload := strings.TrimSpace(prefix + text)
 	args = append(args, payload)
 
 	runCtx := ctx
@@ -76,7 +81,7 @@ func (r *Runner) Run(ctx context.Context, job Job) error {
 	for k, v := range r.cfg.Hook.Env {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
 	}
-	cmd.Env = append(cmd.Env, fmt.Sprintf("BRABBLE_TEXT=%s", job.Text))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("BRABBLE_TEXT=%s", text))
 	cmd.Env = append(cmd.Env, fmt.Sprintf("BRABBLE_PREFIX=%s", prefix))
 
 	out, err := cmd.CombinedOutput()
@@ -95,4 +100,15 @@ func ParseArgs(raw string) ([]string, error) {
 		return []string{}, nil
 	}
 	return shlex.Split(raw)
+}
+
+var (
+	emailRE = regexp.MustCompile(`[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}`)
+	phoneRE = regexp.MustCompile(`\+?\d[\d\s\-\(\)]{6,}\d`)
+)
+
+func redactPII(s string) string {
+	s = emailRE.ReplaceAllString(s, "[redacted-email]")
+	s = phoneRE.ReplaceAllString(s, "[redacted-phone]")
+	return s
 }

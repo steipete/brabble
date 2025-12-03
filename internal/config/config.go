@@ -63,6 +63,7 @@ type Config struct {
 		QueueSize    int               `toml:"queue_size"`
 		TimeoutSec   float64           `toml:"timeout_sec"`
 		Env          map[string]string `toml:"env"`
+		RedactPII    bool              `toml:"redact_pii"`
 	} `toml:"hook"`
 
 	Logging struct {
@@ -87,6 +88,10 @@ type Config struct {
 		Enabled bool   `toml:"enabled"`
 		Addr    string `toml:"addr"`
 	} `toml:"metrics"`
+
+	Transcripts struct {
+		Enabled bool `toml:"enabled"`
+	} `toml:"transcripts"`
 }
 
 // Default returns Config populated with defaults.
@@ -133,6 +138,7 @@ func Default() (*Config, error) {
 	cfg.Hook.QueueSize = 16
 	cfg.Hook.TimeoutSec = 5
 	cfg.Hook.Env = map[string]string{}
+	cfg.Hook.RedactPII = false
 
 	cfg.Logging.Level = "info"
 	cfg.Logging.Format = "text"
@@ -147,6 +153,8 @@ func Default() (*Config, error) {
 
 	cfg.Metrics.Enabled = false
 	cfg.Metrics.Addr = "127.0.0.1:9317"
+
+	cfg.Transcripts.Enabled = true
 
 	return cfg, nil
 }
@@ -230,6 +238,12 @@ func applyEnvOverrides(cfg *Config) {
 	}
 	if v := os.Getenv("BRABBLE_LOG_FORMAT"); v != "" {
 		cfg.Logging.Format = v
+	}
+	if v := os.Getenv("BRABBLE_TRANSCRIPTS_ENABLED"); v != "" {
+		cfg.Transcripts.Enabled = v != "0" && strings.ToLower(v) != "false"
+	}
+	if v := os.Getenv("BRABBLE_REDACT_PII"); v != "" {
+		cfg.Hook.RedactPII = v != "0" && strings.ToLower(v) != "false"
 	}
 }
 
