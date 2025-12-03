@@ -107,6 +107,8 @@ Rules:
 - SIGTERM/SIGINT trigger graceful shutdown: stop audio, flush pending, close socket.
 - Control socket is removed on start and shutdown to avoid stale sockets.
 - Doctor command checks config/model/hook binary presence and PortAudio availability (with whisper build).
+- launchd helper writes a user plist for autostart on macOS.
+- CI: GitHub Actions runs lint/test on Linux and whisper-tag build on macOS with PortAudio installed.
 
 ## Audio & ASR Implementation Notes (to be filled)
 - Replace stdin stub by implementing `internal/asr/whisper_whisper.go` using whisper.cpp Go bindings; build with `-tags whisper`.

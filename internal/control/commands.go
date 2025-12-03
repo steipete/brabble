@@ -13,6 +13,7 @@ import (
 	"brabble/internal/doctor"
 	"brabble/internal/hook"
 	"brabble/internal/logging"
+	"brabble/internal/service"
 
 	"github.com/spf13/cobra"
 )
@@ -159,6 +160,37 @@ func NewDoctorCmd(cfgPath *string) *cobra.Command {
 			if exitCode != 0 {
 				return fmt.Errorf("doctor found issues")
 			}
+			return nil
+		},
+	}
+}
+
+// NewServiceCmd installs a launchd plist (macOS).
+func NewServiceCmd(cfgPath *string) *cobra.Command {
+	return &cobra.Command{
+		Use:   "install-service",
+		Short: "Install user launchd service (macOS)",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg, err := config.Load(*cfgPath)
+			if err != nil {
+				return err
+			}
+			exe, err := os.Executable()
+			if err != nil {
+				return err
+			}
+			params := service.LaunchdParams{
+				Label:  "com.brabble.agent",
+				Binary: exe,
+				Config: cfg.Paths.ConfigPath,
+				Log:    cfg.Paths.LogPath,
+			}
+			path, err := service.WritePlist(params)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("launchd plist written: %s\n", path)
+			fmt.Println("Load with: launchctl load -w", path)
 			return nil
 		},
 	}
