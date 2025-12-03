@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -13,6 +12,7 @@ import (
 	"brabble/internal/doctor"
 	"brabble/internal/hook"
 	"brabble/internal/logging"
+
 	"github.com/spf13/cobra"
 )
 
@@ -86,39 +86,6 @@ func tailFile(path string, n int) error {
 	return nil
 }
 
-// NewListMicsCmd lists input devices (stub).
-func NewListMicsCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "list-mics",
-		Short: "List available microphones",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("build with '-tags whisper' to enable microphone listing (PortAudio required)")
-			return nil
-		},
-	}
-}
-
-// NewSetMicCmd sets preferred mic in config.
-func NewSetMicCmd(cfgPath *string) *cobra.Command {
-	return &cobra.Command{
-		Use:   "set-mic <name>",
-		Short: "Set microphone device name in config",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := config.Load(*cfgPath)
-			if err != nil {
-				return err
-			}
-			cfg.Audio.DeviceName = args[0]
-			if err := config.Save(cfg, cfg.Paths.ConfigPath); err != nil {
-				return err
-			}
-			fmt.Printf("mic set to %q in %s\n", args[0], cfg.Paths.ConfigPath)
-			return nil
-		},
-	}
-}
-
 // NewTestHookCmd triggers hook manually.
 func NewTestHookCmd(cfgPath *string) *cobra.Command {
 	return &cobra.Command{
@@ -167,29 +134,4 @@ func NewDoctorCmd(cfgPath *string) *cobra.Command {
 			return nil
 		},
 	}
-}
-
-// NewServiceCmd installs a launchd plist (macOS).
-func NewServiceCmd(cfgPath *string) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "service",
-		Short: "Manage launchd service (macOS)",
-	}
-
-	cmd.AddCommand(newServiceInstallCmd(cfgPath))
-	cmd.AddCommand(newServiceUninstallCmd())
-	cmd.AddCommand(newServiceStatusCmd())
-	return cmd
-}
-
-// parseInt helper for flags (unused yet)
-func parseInt(s string, def int) int {
-	if s == "" {
-		return def
-	}
-	i, err := strconv.Atoi(s)
-	if err != nil {
-		return def
-	}
-	return i
 }

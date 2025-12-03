@@ -11,6 +11,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewServiceRootCmd groups service subcommands.
+func NewServiceRootCmd(cfgPath *string) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "service",
+		Short: "Manage launchd service (macOS)",
+	}
+	cmd.AddCommand(newServiceInstallCmd(cfgPath))
+	cmd.AddCommand(newServiceUninstallCmd())
+	cmd.AddCommand(newServiceStatusCmd())
+	return cmd
+}
+
 func newServiceInstallCmd(cfgPath *string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "install",

@@ -11,10 +11,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewListMicsCmd lists available input devices (whisper build only).
-func NewListMicsCmd() *cobra.Command {
+// NewMicCmd groups mic subcommands (whisper build).
+func NewMicCmd(cfgPath *string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list-mics",
+		Use:   "mic",
+		Short: "Microphone management",
+	}
+	cmd.AddCommand(newMicListCmd())
+	cmd.AddCommand(newMicSetCmd(cfgPath))
+	return cmd
+}
+
+func newMicListCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list",
 		Short: "List available microphones",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			jsonOut, _ := cmd.Flags().GetBool("json")
@@ -66,4 +76,24 @@ func NewListMicsCmd() *cobra.Command {
 	}
 	cmd.Flags().Bool("json", false, "output JSON")
 	return cmd
+}
+
+func newMicSetCmd(cfgPath *string) *cobra.Command {
+	return &cobra.Command{
+		Use:   "set <name>",
+		Short: "Set microphone device name in config",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg, err := config.Load(*cfgPath)
+			if err != nil {
+				return err
+			}
+			cfg.Audio.DeviceName = args[0]
+			if err := config.Save(cfg, cfg.Paths.ConfigPath); err != nil {
+				return err
+			}
+			fmt.Printf("mic set to %q in %s\n", args[0], cfg.Paths.ConfigPath)
+			return nil
+		},
+	}
 }
