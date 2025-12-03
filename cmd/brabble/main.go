@@ -48,6 +48,7 @@ Notable flags/env:
   brabble install-service --env BRABBLE_METRICS_ADDR=127.0.0.1:9317
   brabble reload
   brabble health`,
+		DisableFlagsInUseLine: true,
 	}
 
 	cfgPath := root.PersistentFlags().StringP("config", "c", "", "Path to config file (TOML). Defaults to ~/.config/brabble/config.toml")
@@ -71,8 +72,68 @@ Notable flags/env:
 	// Hidden internal serve command used by start.
 	root.AddCommand(daemon.NewServeCmd(cfgPath))
 
+	applyColorHelp(root)
+
 	if err := root.Execute(); err != nil {
 		return err
 	}
 	return nil
+}
+
+func applyColorHelp(root *cobra.Command) {
+	const (
+		boldBlue = "\033[1;34m"
+		bold     = "\033[1m"
+		dim      = "\033[2m"
+		reset    = "\033[0m"
+	)
+	root.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		out := cmd.OutOrStdout()
+		fmt.Fprintf(out, "%sBrabble%s — local wake-word voice hook daemon\n", boldBlue, reset)
+		fmt.Fprintf(out, "%sBuilds (if needed), listens on mic, transcribes locally, and runs your hook.%s\n\n", dim, reset)
+
+		fmt.Fprintf(out, "%sUsage%s\n", bold, reset)
+		fmt.Fprintf(out, "  brabble [command] [flags]\n\n")
+
+		fmt.Fprintf(out, "%sKey commands%s\n", bold, reset)
+		fmt.Fprintln(out, "  start|stop|restart          daemon lifecycle")
+		fmt.Fprintln(out, "  status [--json]             uptime + last transcripts")
+		fmt.Fprintln(out, "  list-mics / set-mic         select input device (whisper build)")
+		fmt.Fprintln(out, "  doctor                      check deps/model/hook/portaudio")
+		fmt.Fprintln(out, "  setup                       download default whisper model")
+		fmt.Fprintln(out, "  models list|download|set    manage whisper.cpp models")
+		fmt.Fprintln(out, "  install-service             write launchd plist (macOS)")
+		fmt.Fprintln(out, "  reload                      reload hook/wake config live")
+		fmt.Fprintln(out, "  health                      control-socket liveness ping")
+		fmt.Fprintln(out, "  tail-log                    show last log lines")
+		fmt.Fprintln(out, "  test-hook \"text\"           invoke hook manually")
+		fmt.Fprintln(out, "")
+
+		fmt.Fprintf(out, "%sNotable flags & env%s\n", bold, reset)
+		fmt.Fprintln(out, "  --metrics-addr <addr>   enable /metrics (Prometheus)")
+		fmt.Fprintln(out, "  --no-wake               disable wake word requirement")
+		fmt.Fprintln(out, "  -c, --config <path>     config file (default ~/.config/brabble/config.toml)")
+		fmt.Fprintln(out, "  Env: BRABBLE_WAKE_ENABLED=0, BRABBLE_METRICS_ADDR=host:port,")
+		fmt.Fprintln(out, "       BRABBLE_LOG_LEVEL=debug, BRABBLE_LOG_FORMAT=json,")
+		fmt.Fprintln(out, "       BRABBLE_TRANSCRIPTS_ENABLED=0, BRABBLE_REDACT_PII=1")
+		fmt.Fprintln(out, "")
+
+		fmt.Fprintf(out, "%sExamples%s\n", bold, reset)
+		fmt.Fprintln(out, "  brabble start --metrics-addr 127.0.0.1:9317")
+		fmt.Fprintln(out, "  brabble list-mics")
+		fmt.Fprintln(out, "  brabble models download ggml-medium-q5_1.bin")
+		fmt.Fprintln(out, "  brabble models set ggml-medium-q5_1.bin")
+		fmt.Fprintln(out, "  brabble install-service --env BRABBLE_METRICS_ADDR=127.0.0.1:9317")
+		fmt.Fprintln(out, "  brabble reload")
+		fmt.Fprintln(out, "  brabble health")
+		fmt.Fprintln(out, "")
+
+		fmt.Fprintf(out, "%sCommands%s\n", bold, reset)
+		for _, c := range cmd.Commands() {
+			if c.Hidden {
+				continue
+			}
+			fmt.Fprintf(out, "  %-15s %s\n", c.Name(), c.Short)
+		}
+	})
 }
