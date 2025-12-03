@@ -29,7 +29,6 @@ Local, always-on voice daemon for macOS. Listens for a wake word (“clawd” by
 - `install-service` — write a user launchd plist (macOS) for autostart.
 - `uninstall-service` — remove the launchd plist; use bootout to stop.
 - `setup` — download default whisper model if missing.
-- `reload` — reload config in the running daemon (hook/wake settings).
 - `health` — ping the daemon for liveness.
 - `models list|download|set` — manage whisper.cpp models.
 - pnpm shortcuts (Go under the hood):

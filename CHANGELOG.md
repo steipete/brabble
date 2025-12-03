@@ -12,7 +12,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `doctor` command to verify config/model/hook and PortAudio (when whisper build).
 - `install-service` to write a user launchd plist; `setup` to fetch default model.
 - Hook queue with drop-on-full, metrics endpoint (`/metrics`) optional via config, JSON output for `status` and `list-mics`.
-- `reload` command to refresh hook/wake config without restart.
 - Health command; env overrides for wake/metrics; graceful hook worker drain on shutdown.
 - Logging level/format config and env overrides; Makefile targets for build and build-whisper.
 - Transcript logging toggle; hook PII redaction; README instructions for full setup (portaudio/pkg-config, model download, pnpm flow).

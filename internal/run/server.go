@@ -36,8 +36,7 @@ type Server struct {
 	metrics metrics
 	hookCh  chan hook.Job
 
-	cfgMu sync.Mutex
-	wg    sync.WaitGroup
+	wg sync.WaitGroup
 }
 
 // Serve runs the daemon until interrupted.
@@ -235,29 +234,12 @@ func (s *Server) handleConn(ctx context.Context, conn net.Conn) {
 			Transcripts: s.copyTranscripts(),
 		}
 		_ = json.NewEncoder(conn).Encode(resp)
-	case "reload":
-		msg, ok := s.reloadConfig()
-		resp := control.SimpleResponse{OK: ok, Message: msg}
-		_ = json.NewEncoder(conn).Encode(resp)
 	case "health":
 		_ = json.NewEncoder(conn).Encode(control.SimpleResponse{OK: true, Message: "ok"})
 	default:
 		// ignore unknown
 	}
 }
-
-func (s *Server) reloadConfig() (string, bool) {
-	newCfg, err := config.Load(s.cfg.Paths.ConfigPath)
-	if err != nil {
-		return err.Error(), false
-	}
-	s.cfgMu.Lock()
-	defer s.cfgMu.Unlock()
-	s.cfg = newCfg
-	s.hook = hook.NewRunner(newCfg, s.logger)
-	return "hook/wake reloaded (restart needed for audio settings)", true
-}
-
 func (s *Server) copyTranscripts() []control.Transcript {
 	s.transcriptsMu.Lock()
 	defer s.transcriptsMu.Unlock()

@@ -112,9 +112,8 @@ Rules:
 - CI: GitHub Actions runs lint/test on Linux and whisper-tag build on macOS with PortAudio installed.
 - Setup command fetches default whisper model if missing.
 - Models command supports listing known models, downloading into state dir, and setting `asr.model_path`.
-- Reload command refreshes hook/wake config at runtime (audio settings still need restart).
 - Optional `/metrics` endpoint (Prometheus text) gated by config.
-- Health and reload ops exposed on the control socket; env overrides `BRABBLE_WAKE_ENABLED`, `BRABBLE_METRICS_ADDR`.
+- Health op exposed on the control socket; env overrides `BRABBLE_WAKE_ENABLED`, `BRABBLE_METRICS_ADDR`.
 - Logging config (level/format) with env overrides `BRABBLE_LOG_LEVEL`, `BRABBLE_LOG_FORMAT`.
 - Hook PII redaction toggle; transcript logging toggle.
 
