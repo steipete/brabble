@@ -63,8 +63,3 @@ func checkPortAudioPkgConfig() Result {
 	}
 	return Result{Name: "portaudio", Pass: true, Detail: "found via pkg-config"}
 }
-
-// checkPortAudio is overridden in whisper build.
-func checkPortAudio(_ bool) Result {
-	return Result{Name: "portaudio", Pass: true, Detail: "skipped (build without whisper tag)"}
-}
