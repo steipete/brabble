@@ -5,8 +5,8 @@ Always-on local voice daemon that listens via microphone, detects a wake word, t
 
 ## Scope
 - **Targets**: macOS (Apple Silicon/Intel). Linux possible later.
-- **ASR**: whisper.cpp via Go bindings (future), quantized medium/large models. Stub build uses stdin so the daemon compiles before audio/ASR is wired.
-- **VAD**: WebRTC VAD (lightweight) or Silero VAD via onnxruntime (optional, heavier).
+- **ASR**: whisper.cpp via Go bindings (enabled with `-tags whisper`) using quantized medium/large models; stub build uses stdin.
+- **VAD**: WebRTC VAD (current default); Silero VAD via onnxruntime remains optional future work.
 - **Wake word**: Configurable, default “clawd”. Optional disable.
 - **Hook**: Local shell command with prefix, env vars, cooldown, and payload on argv.
 - **Control**: Start/stop/restart/status/tail-log/list-mics/set-mic/test-hook via CLI; status over UNIX socket.
@@ -14,9 +14,9 @@ Always-on local voice daemon that listens via microphone, detects a wake word, t
 ## Architecture
 1) **Daemon process** (`brabble serve` launched by `start`):
    - Writes PID file and owns a UNIX domain socket for control.
-   - Captures audio from selected mic → VAD segments speech.
-   - Wake-word gate (string match or dedicated wake engine) before dispatch.
-   - ASR transcribes segments; finished segments sent to hook runner and transcript log.
+   - Captures audio from selected mic via PortAudio → WebRTC VAD segments speech.
+   - Wake-word gate (string match) before dispatch.
+   - ASR (whisper.cpp) transcribes segments; finished segments sent to hook runner and transcript log.
 2) **CLI client**:
    - Subcommands send JSON requests over the UNIX socket or manage lifecycle (start/stop).
 3) **State & logs** (macOS defaults):
@@ -114,8 +114,8 @@ Rules:
 - Wake word: initial pass can be string match on transcribed text; optional Porcupine/keyword spotter before ASR for lower cost.
 
 ## Build Flavors
-- **Stub** (default): `go build ./cmd/brabble` — uses stdin recognizer; useful for wiring tests and daemon control.
-- **Whisper** (future): `go build -tags whisper ./cmd/brabble` after adding whisper.cpp + audio/VAD implementations.
+- **Stub** (default): `go build ./cmd/brabble` — uses stdin recognizer; useful for wiring tests/control without audio deps.
+- **Whisper**: `go build -tags whisper ./cmd/brabble` after installing PortAudio and downloading a whisper.cpp model.
 
 ## Dependencies
 - Go 1.25+
@@ -128,7 +128,7 @@ Rules:
 - Silence timeout 1.0s; `min_chars` 24; cooldown 1s.
 
 ## Open Items / TODO
-- Implement real ASR/VAD/audio pipeline and device listing.
-- Add `reload` command to re-read config without restart.
+- Optional: Silero VAD via onnxruntime for better noise robustness.
+- Optional: `reload` command to re-read config without restart.
 - Add launchd plist template for macOS autostart.
 - Add metrics endpoint (optional) and health checks.

@@ -86,7 +86,7 @@ func NewListMicsCmd() *cobra.Command {
 		Use:   "list-mics",
 		Short: "List available microphones",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("microphone enumeration not implemented in stub build; integrate PortAudio and rebuild")
+			fmt.Println("build with '-tags whisper' to enable microphone listing (PortAudio required)")
 			return nil
 		},
 	}

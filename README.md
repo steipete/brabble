@@ -2,7 +2,7 @@
 
 Local, always-on voice daemon with a wake word and a configurable hook. Brabble listens on your Mac, waits for “Clawd” (configurable), transcribes what you say, then runs a command — by default `../warelay send "Voice brabble from ${hostname}: <text>"`. Built in Go for a single static binary and daemon-friendly control.
 
-> Status: **0.1.0 skeleton** — daemon, config, logging, hook, wake-word filtering, and control CLI are wired. Audio/VAD/Whisper are stubbed so it builds anywhere; swap in whisper.cpp + PortAudio to make it truly listen.
+> Status: **0.2.0** — daemon/control/hook/wake/logging done; real audio pipeline available with `-tags whisper` (PortAudio + WebRTC VAD + whisper.cpp). Default build still works everywhere using stdin as the “mic”.
 
 ## Features
 - Daemon lifecycle: `start | stop | restart | status | tail-log | list-mics | set-mic | test-hook`.
@@ -11,8 +11,8 @@ Local, always-on voice daemon with a wake word and a configurable hook. Brabble 
 - Rolling transcripts + status via UNIX socket; rotating logs under `~/Library/Application Support/brabble/`.
 - Config auto-created at `~/.config/brabble/config.toml` with sane defaults for macOS + Metal.
 
-## Quick start (stub build)
-The stub uses stdin as the “microphone” so you can exercise the daemon and hook without audio deps.
+## Quick start (stub build, no audio deps)
+The stub uses stdin as the “microphone” so you can exercise the daemon and hook without audio libs.
 
 ```sh
 go build ./cmd/brabble
@@ -22,11 +22,28 @@ go build ./cmd/brabble
 ./brabble test-hook "clawd ship it"
 ```
 
-## Real audio plan (not yet implemented)
-- Audio capture: PortAudio/CoreAudio with device enumeration for `list-mics` / `set-mic`.
-- VAD: WebRTC VAD (light) or Silero VAD via onnxruntime (better in noise).
-- ASR: whisper.cpp Go binding; build with `-tags whisper` after adding `internal/asr/whisper_whisper.go`.
-- Optional wake-word front-end (Porcupine) before ASR for lower CPU.
+## Full audio build (macOS)
+Dependencies:
+- `brew install portaudio` (required for capture).
+- A Whisper model file, e.g. `ggml-medium-q5_1.bin`:
+  ```sh
+  mkdir -p "$HOME/Library/Application Support/brabble/models"
+  curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium-q5_1.bin \
+    -o "$HOME/Library/Application Support/brabble/models/ggml-medium-q5_1.bin"
+  ```
+
+Build and run:
+```sh
+go build -tags whisper ./cmd/brabble
+./brabble start        # daemonize with real mic + VAD + whisper
+# or foreground for debugging:
+./brabble serve
+```
+
+Useful commands:
+- `./brabble list-mics` — enumerate inputs (uses PortAudio).
+- `./brabble set-mic "MacBook Pro Microphone"` — persist preferred device.
+- `./brabble status` — running?, uptime, recent transcripts.
 
 ## Configuration (auto-created)
 `~/.config/brabble/config.toml`
@@ -36,13 +53,12 @@ go build ./cmd/brabble
 device_name = ""      # set via `brabble set-mic`
 sample_rate = 16000
 channels = 1
-frame_ms = 20
+frame_ms = 20         # must be 10/20/30 for VAD
 
 [vad]
 enabled = true
 silence_ms = 1000
 aggressiveness = 2
-energy_threshold = 0.0
 min_speech_ms = 300
 max_segment_ms = 10000
 
