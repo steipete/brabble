@@ -25,10 +25,11 @@ const (
 // Config holds user configuration loaded from TOML.
 type Config struct {
 	Audio struct {
-		DeviceName string `toml:"device_name"`
-		SampleRate int    `toml:"sample_rate"`
-		Channels   int    `toml:"channels"`
-		FrameMS    int    `toml:"frame_ms"`
+		DeviceName  string `toml:"device_name"`
+		DeviceIndex int    `toml:"device_index"`
+		SampleRate  int    `toml:"sample_rate"`
+		Channels    int    `toml:"channels"`
+		FrameMS     int    `toml:"frame_ms"`
 	} `toml:"audio"`
 
 	VAD struct {
@@ -38,6 +39,7 @@ type Config struct {
 		EnergyThresh   float64 `toml:"energy_threshold"`
 		MinSpeechMS    int     `toml:"min_speech_ms"`
 		MaxSegmentMS   int     `toml:"max_segment_ms"`
+		PartialFlushMS int     `toml:"partial_flush_ms"`
 	} `toml:"vad"`
 
 	ASR struct {
@@ -119,6 +121,7 @@ func Default() (*Config, error) {
 	cfg.VAD.MinSpeechMS = 300
 	cfg.VAD.MaxSegmentMS = 10000
 	cfg.VAD.EnergyThresh = 0.0
+	cfg.VAD.PartialFlushMS = 4000
 
 	cfg.ASR.ModelPath = filepath.Join(stateDir, "models", "ggml-medium-q5_1.bin")
 	cfg.ASR.Language = "auto"

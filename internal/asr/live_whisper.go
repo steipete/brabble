@@ -68,49 +68,68 @@ func (r *whisperRecognizer) Run(ctx context.Context, out chan<- Segment) error {
 	defer r.model.Close()
 	defer portaudio.Terminate()
 
-	dev, err := selectDevice(r.cfg.Audio.DeviceName)
-	if err != nil {
-		return err
-	}
-
 	frameSamples := r.cfg.Audio.SampleRate * r.cfg.Audio.FrameMS / 1000
 	if ok := vad.ValidRateAndFrameLength(r.cfg.Audio.SampleRate, frameSamples); !ok {
 		return fmt.Errorf("invalid frame_ms %d for sample_rate %d", r.cfg.Audio.FrameMS, r.cfg.Audio.SampleRate)
 	}
 
-	buf := make([]int16, frameSamples)
-	stream, err := portaudio.OpenStream(portaudio.StreamParameters{
-		Input: portaudio.StreamDeviceParameters{
-			Device:   dev,
-			Channels: r.cfg.Audio.Channels,
-			Latency:  dev.DefaultLowInputLatency,
-		},
-		SampleRate:      float64(r.cfg.Audio.SampleRate),
-		FramesPerBuffer: frameSamples,
-	}, &buf)
-	if err != nil {
-		return fmt.Errorf("open stream: %w", err)
-	}
-	defer stream.Close()
+	segments := make(chan []int16, 8)
+	go r.transcribeWorker(ctx, segments, out)
 
+	// retry loop for device/stream failures
+	for {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		dev, err := selectDevice(r.cfg.Audio.DeviceName, r.cfg.Audio.DeviceIndex)
+		if err != nil {
+			r.logger.Warnf("select device: %v; retrying in 2s", err)
+			time.Sleep(2 * time.Second)
+			continue
+		}
+		buf := make([]int16, frameSamples)
+		stream, err := portaudio.OpenStream(portaudio.StreamParameters{
+			Input: portaudio.StreamDeviceParameters{
+				Device:   dev,
+				Channels: r.cfg.Audio.Channels,
+				Latency:  dev.DefaultLowInputLatency,
+			},
+			SampleRate:      float64(r.cfg.Audio.SampleRate),
+			FramesPerBuffer: frameSamples,
+		}, &buf)
+		if err != nil {
+			r.logger.Warnf("open stream: %v; retrying in 2s", err)
+			time.Sleep(2 * time.Second)
+			continue
+		}
+		r.logger.Infof("listening on mic: %s @ %d Hz", dev.Name, r.cfg.Audio.SampleRate)
+		if err := r.captureLoop(ctx, stream, buf, segments); err != nil && !errors.Is(err, context.Canceled) {
+			r.logger.Warnf("stream ended: %v; restarting in 2s", err)
+			_ = stream.Close()
+			time.Sleep(2 * time.Second)
+			continue
+		}
+		_ = stream.Close()
+		return nil
+	}
+}
+
+func (r *whisperRecognizer) captureLoop(ctx context.Context, stream *portaudio.Stream, buf []int16, segments chan<- []int16) error {
 	if err := stream.Start(); err != nil {
 		return fmt.Errorf("start stream: %w", err)
 	}
 	defer stream.Stop()
 
-	segments := make(chan []int16, 8)
-	go r.transcribeWorker(ctx, segments, out)
-
 	var (
-		chunk       []int16
-		inSpeech    bool
-		lastVoice   time.Time
-		speechBegan time.Time
-		silenceDur  = time.Duration(r.cfg.VAD.SilenceMS) * time.Millisecond
-		maxSegDur   = time.Duration(r.cfg.VAD.MaxSegmentMS) * time.Millisecond
+		chunk           []int16
+		inSpeech        bool
+		lastVoice       time.Time
+		speechBegan     time.Time
+		lastPartialSent time.Time
+		silenceDur      = time.Duration(r.cfg.VAD.SilenceMS) * time.Millisecond
+		maxSegDur       = time.Duration(r.cfg.VAD.MaxSegmentMS) * time.Millisecond
+		partialFlush    = time.Duration(r.cfg.VAD.PartialFlushMS) * time.Millisecond
 	)
-
-	r.logger.Infof("listening on mic: %s @ %d Hz", dev.Name, r.cfg.Audio.SampleRate)
 
 	for {
 		select {
@@ -131,16 +150,28 @@ func (r *whisperRecognizer) Run(ctx context.Context, out chan<- Segment) error {
 			if !inSpeech {
 				inSpeech = true
 				speechBegan = time.Now()
+				lastPartialSent = time.Now()
 				chunk = chunk[:0]
 			}
 			chunk = append(chunk, buf...)
 			lastVoice = time.Now()
+
+			if partialFlush > 0 && time.Since(lastPartialSent) >= partialFlush && len(chunk) > 0 {
+				cpy := make([]int16, len(chunk))
+				copy(cpy, chunk)
+				select {
+				case segments <- cpy:
+					lastPartialSent = time.Now()
+					chunk = chunk[:0]
+					speechBegan = time.Now()
+				default:
+					r.logger.Warn("segment queue full, dropping partial")
+				}
+			}
 		} else if inSpeech {
-			// check if silence long enough or max segment exceeded
 			now := time.Now()
 			if (now.Sub(lastVoice) >= silenceDur && len(chunk) > 0) ||
 				(maxSegDur > 0 && now.Sub(speechBegan) >= maxSegDur) {
-				// finalize
 				cpy := make([]int16, len(chunk))
 				copy(cpy, chunk)
 				select {
@@ -244,10 +275,16 @@ func warmup(model whisper.Model, cfg *config.Config, logger *logrus.Logger) erro
 	return nil
 }
 
-func selectDevice(preferred string) (*portaudio.DeviceInfo, error) {
+func selectDevice(preferred string, index int) (*portaudio.DeviceInfo, error) {
 	devs, err := portaudio.Devices()
 	if err != nil {
 		return nil, fmt.Errorf("list devices: %w", err)
+	}
+	if index >= 0 && index < len(devs) {
+		d := devs[index]
+		if d.MaxInputChannels > 0 {
+			return d, nil
+		}
 	}
 	if preferred != "" {
 		for _, d := range devs {

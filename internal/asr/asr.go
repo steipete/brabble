@@ -19,6 +19,7 @@ type Segment struct {
 	Start     time.Time
 	End       time.Time
 	Confidence float64
+	Partial    bool
 }
 
 // Recognizer converts audio into segments.
@@ -52,7 +53,7 @@ func (s *stdinRecognizer) Run(ctx context.Context, out chan<- Segment) error {
 		default:
 		}
 		text := strings.TrimSpace(reader.Text())
-		out <- Segment{Text: text, Start: time.Now(), End: time.Now(), Confidence: 1.0}
+		out <- Segment{Text: text, Start: time.Now(), End: time.Now(), Confidence: 1.0, Partial: false}
 	}
 	if err := reader.Err(); err != nil {
 		return fmt.Errorf("stdin read: %w", err)

@@ -127,7 +127,9 @@ func (s *Server) handleSegment(ctx context.Context, seg asr.Segment) {
 	s.lastHeard.Store(time.Now().UnixNano())
 	s.metrics.incHeard()
 	s.logger.Infof("heard: %q", text)
-	s.recordTranscript(text)
+	if !seg.Partial {
+		s.recordTranscript(text)
+	}
 	if s.cfg.Wake.Enabled && !strings.Contains(strings.ToLower(text), strings.ToLower(s.cfg.Wake.Word)) {
 		return
 	}
@@ -135,7 +137,7 @@ func (s *Server) handleSegment(ctx context.Context, seg asr.Segment) {
 	if s.cfg.Wake.Enabled {
 		text = removeWakeWord(text, s.cfg.Wake.Word)
 	}
-	if len(text) < s.cfg.Hook.MinChars {
+	if len(text) < s.cfg.Hook.MinChars || seg.Partial {
 		return
 	}
 	if !s.hook.ShouldRun() {
