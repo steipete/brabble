@@ -11,9 +11,10 @@ function printHelp() {
   console.log(chalk.dim('Builds the Go binary if needed, then runs it.'));
   console.log('');
   console.log(chalk.bold('Usage:'));
-  console.log('  pnpm brabble            ', chalk.dim('build + serve (foreground)'));
-  console.log('  pnpm brabble <args...>  ', chalk.dim('build + run ./bin/brabble <args>'));
-  console.log('  pnpm brabble --help     ', chalk.dim('this help'));
+  console.log('  pnpm brabble             ', chalk.dim('build + serve (foreground)'));
+  console.log('  pnpm brabble <args...>   ', chalk.dim('build + run ./bin/brabble <args>'));
+  console.log('  pnpm brabble --help      ', chalk.dim('this help'));
+  console.log('  pnpm brabble --version   ', chalk.dim('show brabble version'));
   console.log('');
   console.log(chalk.bold('Common args:'));
   console.log('  start|stop|restart|status|tail-log|list-mics|set-mic|doctor|setup|models ...');
@@ -29,6 +30,12 @@ async function main() {
   const args = process.argv.slice(2);
   if (args.includes('--help') || args.includes('-h')) {
     printHelp();
+    return;
+  }
+  if (args.includes('--version') || args.includes('-v')) {
+    await ensureBuilt();
+    const { stdout } = await execa(BIN, ['--version']);
+    console.log(stdout.trim());
     return;
   }
   await ensureBuilt();
