@@ -52,6 +52,7 @@ Notable flags/env:
 	}
 
 	cfgPath := root.PersistentFlags().StringP("config", "c", "", "Path to config file (TOML). Defaults to ~/.config/brabble/config.toml")
+	root.CompletionOptions.DisableDefaultCmd = true
 
 	root.AddCommand(daemon.NewStartCmd(cfgPath))
 	root.AddCommand(daemon.NewStopCmd(cfgPath))
