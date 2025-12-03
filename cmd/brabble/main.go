@@ -20,7 +20,16 @@ func main() {
 func run() error {
 	root := &cobra.Command{
 		Use:   "brabble",
-		Short: "Brabble — always‑on voice hook daemon",
+		Short: "Brabble — local wake-word voice hook daemon",
+		Long: `Brabble listens on your mic, waits for a wake word ("clawd"), transcribes locally with whisper.cpp,
+and fires a configurable hook (default: ../warelay send "Voice brabble from ${hostname}: <text>").
+
+Common tasks:
+  - start/stop/restart the daemon
+  - list/set microphones (whisper build)
+  - download/set whisper models (models list|download|set)
+  - setup (download default model), doctor (check deps), install-service (launchd)
+  - reload hook/wake config, health check, tail logs/status`,
 	}
 
 	cfgPath := root.PersistentFlags().StringP("config", "c", "", "Path to config file (TOML). Defaults to ~/.config/brabble/config.toml")
