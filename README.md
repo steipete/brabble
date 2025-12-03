@@ -39,6 +39,22 @@ Local, always-on voice daemon for macOS. Listens for a wake word (“clawd” by
   - `pnpm format` → `gofmt -w .`
   - `pnpm test` → `go test ./...`
 
+## Requirements to actually listen
+- Go 1.25+ and pnpm installed.
+- macOS: `brew install portaudio pkg-config`.
+- Whisper model present, e.g.:
+  ```sh
+  mkdir -p "$HOME/Library/Application Support/brabble/models"
+  curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium-q5_1.bin \
+    -o "$HOME/Library/Application Support/brabble/models/ggml-medium-q5_1.bin"
+  ```
+  or run `pnpm setup` to download the default.
+- Hook target exists (default `../warelay send …`); set `hook.command` to an absolute path if needed.
+- Build with audio: `pnpm build` then `./bin/brabble start --metrics-addr 127.0.0.1:9317` (whisper build); or `go build -tags whisper ./cmd/brabble`.
+- Pick mic: `./bin/brabble list-mics` (whisper build) then `./bin/brabble set-mic "<name>"`.
+- Verify: `./bin/brabble doctor` (deps/model/hook) and `./bin/brabble health` after start.
+- Optional autostart: `./bin/brabble install-service --env BRABBLE_METRICS_ADDR=127.0.0.1:9317`; load/kickstart/bootout commands are printed.
+
 ## CI
 - GitHub Actions: lint (`golangci-lint`), `go test` (stub build), macOS whisper build (PortAudio).
 
@@ -86,11 +102,16 @@ cooldown_sec = 1
 min_chars = 24
 max_latency_ms = 5000
 queue_size = 16
+timeout_sec = 5
+redact_pii = false
 env = {}
 
 [logging]
 level = "info"   # debug|info|warn|error
 format = "text"  # text|json
+
+[transcripts]
+enabled = true
 ```
 State/logs live under `~/Library/Application Support/brabble/` (socket, pid, logs, transcripts).
 
@@ -99,7 +120,7 @@ State/logs live under `~/Library/Application Support/brabble/` (socket, pid, log
 - Transcripts are tailed by `status`; logs rotate (20 MB, 3 backups, 30 days).
 - Default build uses stdin as mic; whisper build uses PortAudio + VAD + whisper.cpp.
 - Metrics: optional Prometheus-style endpoint at `/metrics` when enabled in config.
-- Env overrides: `BRABBLE_WAKE_ENABLED=0` to disable wake; `BRABBLE_METRICS_ADDR=127.0.0.1:9317` to enable metrics at a custom address; `BRABBLE_LOG_LEVEL=debug`, `BRABBLE_LOG_FORMAT=json`.
+- Env overrides: `BRABBLE_WAKE_ENABLED=0` to disable wake; `BRABBLE_METRICS_ADDR=127.0.0.1:9317` to enable metrics at a custom address; `BRABBLE_LOG_LEVEL=debug`, `BRABBLE_LOG_FORMAT=json`; `BRABBLE_TRANSCRIPTS_ENABLED=0` to skip transcript writes; `BRABBLE_REDACT_PII=1` to mask emails/phones before hooks/logs.
 - Launchd: `install-service --env KEY=VAL` adds EnvironmentVariables; load with `launchctl load -w ~/Library/LaunchAgents/com.brabble.agent.plist`, start `launchctl kickstart gui/$(id -u)/com.brabble.agent`, stop `launchctl bootout gui/$(id -u)/com.brabble.agent`.
 
 ## Roadmap
