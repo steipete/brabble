@@ -1,5 +1,7 @@
 # Brabble
 
+🎙️ Brabble — Open hailing frequencies… and run the command.
+
 Local, always-on voice daemon with a wake word and a configurable hook. Brabble listens on your Mac, waits for “Clawd” (configurable), transcribes what you say, then runs a command — by default `../warelay send "Voice brabble from ${hostname}: <text>"`. Built in Go for a single static binary and daemon-friendly control.
 
 > Status: **0.2.0** — daemon/control/hook/wake/logging done; real audio pipeline available with `-tags whisper` (PortAudio + WebRTC VAD + whisper.cpp). Default build still works everywhere using stdin as the “mic”.
