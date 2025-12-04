@@ -21,7 +21,7 @@ jobs:
       - name: Install native deps (whisper + portaudio)
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake libopenblas-dev portaudio19-dev pkg-config libsoundio1
+          sudo apt-get install -y build-essential cmake libopenblas-dev portaudio19-dev pkg-config
           git clone --depth 1 https://github.com/ggerganov/whisper.cpp.git /tmp/whisper.cpp
           cmake -S /tmp/whisper.cpp -B /tmp/whisper.cpp/build -DGGML_OPENBLAS=ON -DBUILD_SHARED_LIBS=ON
           cmake --build /tmp/whisper.cpp/build --target whisper --config Release
