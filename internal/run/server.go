@@ -268,18 +268,10 @@ func hookQueueSize(cfg *config.Config) int {
 }
 
 func selectHookConfig(cfg *config.Config, text string) *config.HookConfig {
-	lower := strings.ToLower(text)
-	for i := range cfg.Hooks {
-		hk := &cfg.Hooks[i]
-		if matchesHook(lower, hk) {
-			return hk
-		}
+	if len(cfg.Hooks) == 0 {
+		return nil
 	}
-	// fallback: first hook if configured
-	if len(cfg.Hooks) > 0 {
-		return &cfg.Hooks[0]
-	}
-	return nil
+	return &cfg.Hooks[0]
 }
 
 func (s *Server) recordTranscript(text string) {
