@@ -59,9 +59,9 @@ func NewTranscribeCmd(cfgPath *string) *cobra.Command {
 			if cfg.Wake.Enabled && !noWake && !strings.Contains(strings.ToLower(txt), strings.ToLower(cfg.Wake.Word)) {
 				return fmt.Errorf("wake word %q not found; use --no-wake to override", cfg.Wake.Word)
 			}
-			if cfg.Wake.Enabled && !noWake {
-				txt = removeWakeWordLocal(txt, cfg.Wake.Word)
-			}
+            if cfg.Wake.Enabled && !noWake {
+                txt = removeWakeWordLocal(txt, cfg.Wake.Word)
+            }
 			if len(txt) < cfg.Hook.MinChars {
 				return fmt.Errorf("skipped: len(text)=%d < min_chars=%d", len(txt), cfg.Hook.MinChars)
 			}
@@ -114,30 +114,7 @@ func readWAV16kMono(path string) ([]float32, error) {
 	const targetSR = 16000
 	if srcSR == targetSR {
 		return mono, nil
-	}
-	return resampleLinear(mono, srcSR, targetSR), nil
-}
-
-func resampleLinear(in []float32, srcSR, dstSR int) []float32 {
-	if srcSR == dstSR || len(in) == 0 {
-		out := make([]float32, len(in))
-		copy(out, in)
-		return out
-	}
-	ratio := float64(dstSR) / float64(srcSR)
-	outLen := int(math.Ceil(float64(len(in)) * ratio))
-	out := make([]float32, outLen)
-	for i := 0; i < outLen; i++ {
-		pos := float64(i) / ratio
-		idx := int(pos)
-		if idx >= len(in)-1 {
-			out[i] = in[len(in)-1]
-			continue
-		}
-		frac := float32(pos - float64(idx))
-		out[i] = in[idx]*(1-frac) + in[idx+1]*frac
-	}
-	return out
+    return resampleLinear(mono, srcSR, targetSR), nil
 }
 
 func runWhisperOnce(cfg *config.Config, logger *logrus.Logger, samples []float32) (string, error) {
@@ -168,19 +145,4 @@ func runWhisperOnce(cfg *config.Config, logger *logrus.Logger, samples []float32
 		}
 	}
 	return b.String(), nil
-}
-
-func removeWakeWordLocal(text, word string) string {
-	lw := strings.ToLower(word)
-	fields := strings.Fields(text)
-	out := make([]string, 0, len(fields))
-	skipped := false
-	for _, f := range fields {
-		if !skipped && strings.EqualFold(strings.Trim(f, " ,.!?;:\"'"), lw) {
-			skipped = true
-			continue
-		}
-		out = append(out, f)
-	}
-	return strings.Join(out, " ")
 }
