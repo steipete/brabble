@@ -11,7 +11,6 @@ import (
 	"brabble/internal/logging"
 
 	"github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -79,7 +78,7 @@ func NewTranscribeCmd(cfgPath *string) *cobra.Command {
 	return cmd
 }
 
-func runWhisperOnce(cfg *config.Config, logger *logrus.Logger, samples []float32) (string, error) {
+func runWhisperOnce(cfg *config.Config, logger *logging.Logger, samples []float32) (string, error) {
 	model, err := whisper.New(cfg.ASR.ModelPath)
 	if err != nil {
 		return "", err

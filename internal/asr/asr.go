@@ -5,8 +5,7 @@ import (
 	"time"
 
 	"brabble/internal/config"
-
-	"github.com/sirupsen/logrus"
+	"brabble/internal/logging"
 )
 
 // Segment is a recognized piece of text.
@@ -24,6 +23,6 @@ type Recognizer interface {
 }
 
 // NewRecognizer returns the whisper recognizer.
-func NewRecognizer(cfg *config.Config, logger *logrus.Logger) (Recognizer, error) {
+func NewRecognizer(cfg *config.Config, logger *logging.Logger) (Recognizer, error) {
 	return newWhisperRecognizer(cfg, logger)
 }

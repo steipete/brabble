@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"brabble/internal/config"
+	"brabble/internal/logging"
 
 	"github.com/google/shlex"
-	"github.com/sirupsen/logrus"
 )
 
 // Job represents a hook invocation request.
@@ -25,7 +25,7 @@ type Job struct {
 // Runner executes hooks with cooldown and prefix handling.
 type Runner struct {
 	cfg      *config.Config
-	logger   *logrus.Logger
+	logger   *logging.Logger
 	lastRun  time.Time
 	mu       sync.Mutex
 	hostname string
@@ -34,7 +34,7 @@ type Runner struct {
 }
 
 // NewRunner constructs a hook runner with hostname cached.
-func NewRunner(cfg *config.Config, logger *logrus.Logger) *Runner {
+func NewRunner(cfg *config.Config, logger *logging.Logger) *Runner {
 	host, _ := os.Hostname()
 	return &Runner{
 		cfg:      cfg,

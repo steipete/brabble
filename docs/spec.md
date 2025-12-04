@@ -141,7 +141,7 @@ Rules:
 
 ## Status & Logging
 - Status reply: running flag, uptime seconds, last `status_tail` transcripts (text + timestamp).
-- Logging: logrus + rotating file (20 MB, 3 backups, 30 days); also to stdout when foreground.
+- Logging: stdlib slog + rotating file (20 MB, 3 backups, 30 days); also to stdout when foreground.
 - Transcript log: tab-separated RFC3339 timestamp and text for history.
 
 ## Daemon Lifecycle
@@ -191,7 +191,7 @@ Use `brabble models download <name>` then `brabble models set <name>` to switch.
 ## Dependencies
 - Go 1.25+
 - Runtime libs (planned): PortAudio (macOS: `brew install portaudio`), whisper.cpp built as dylib or static via cgo, optional onnxruntime (Silero VAD), optional Porcupine wake word SDK.
-- Current tree vendors only Go libs: cobra, logrus, lumberjack, go-toml, shlex.
+- Current tree vendors only Go libs: cobra, slog stdlib, lumberjack, go-toml, shlex.
 
 ## Operational Defaults
 - Wake word “clawd”, medium Q5 Whisper model, Metal device auto-detected.

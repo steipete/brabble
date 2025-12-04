@@ -6,8 +6,7 @@ import (
 	"time"
 
 	"brabble/internal/config"
-
-	"github.com/sirupsen/logrus"
+	"brabble/internal/logging"
 )
 
 func TestShouldRunCooldown(t *testing.T) {
@@ -16,7 +15,7 @@ func TestShouldRunCooldown(t *testing.T) {
 		Command:     "/bin/echo",
 		CooldownSec: 0.5,
 	}}
-	r := NewRunner(cfg, logrus.New())
+	r := NewRunner(cfg, logging.NewTestLogger())
 	r.SelectHook(&cfg.Hooks[0])
 
 	if !r.ShouldRun() {
@@ -42,7 +41,7 @@ func TestRunUsesPrefixAndEnv(t *testing.T) {
 		Prefix:  "pref:",
 	}}
 
-	r := NewRunner(cfg, logrus.New())
+	r := NewRunner(cfg, logging.NewTestLogger())
 	r.SelectHook(&cfg.Hooks[0])
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()

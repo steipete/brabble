@@ -11,17 +11,17 @@ import (
 	"unsafe"
 
 	"brabble/internal/config"
+	"brabble/internal/logging"
 
 	"github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper"
 	"github.com/gordonklaus/portaudio"
 	vad "github.com/maxhawkins/go-webrtcvad"
-	"github.com/sirupsen/logrus"
 )
 
 // whisperRecognizer captures audio, runs VAD, then transcribes with whisper.cpp.
 type whisperRecognizer struct {
 	cfg    *config.Config
-	logger *logrus.Logger
+	logger *logging.Logger
 	model  whisper.Model
 	vad    *vad.VAD
 }
@@ -31,7 +31,7 @@ type segmentChunk struct {
 	partial bool
 }
 
-func newWhisperRecognizer(cfg *config.Config, logger *logrus.Logger) (Recognizer, error) {
+func newWhisperRecognizer(cfg *config.Config, logger *logging.Logger) (Recognizer, error) {
 	if cfg.Audio.Channels != 1 {
 		return nil, fmt.Errorf("only mono input supported; set audio.channels = 1")
 	}
@@ -288,7 +288,7 @@ func (r *whisperRecognizer) transcribe(ctx context.Context, pcm []int16) (string
 	return b.String(), nil
 }
 
-func warmup(model whisper.Model, cfg *config.Config, logger *logrus.Logger) error {
+func warmup(model whisper.Model, cfg *config.Config, logger *logging.Logger) error {
 	ctx, err := model.NewContext()
 	if err != nil {
 		return err

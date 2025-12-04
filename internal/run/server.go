@@ -19,14 +19,13 @@ import (
 	"brabble/internal/config"
 	"brabble/internal/control"
 	"brabble/internal/hook"
-
-	"github.com/sirupsen/logrus"
+	"brabble/internal/logging"
 )
 
 // Server manages audio capture, hook dispatch, metrics, and control endpoints.
 type Server struct {
 	cfg       *config.Config
-	logger    *logrus.Logger
+	logger    *logging.Logger
 	hook      *hook.Runner
 	startedAt time.Time
 	lastHeard atomic.Int64
@@ -41,7 +40,7 @@ type Server struct {
 }
 
 // Serve runs the daemon until interrupted.
-func Serve(cfg *config.Config, logger *logrus.Logger) error {
+func Serve(cfg *config.Config, logger *logging.Logger) error {
 	if err := config.MustStatePaths(cfg); err != nil {
 		return err
 	}
