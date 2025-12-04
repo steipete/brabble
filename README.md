@@ -20,9 +20,9 @@ Always-on, local-only voice daemon for macOS. Hears your wake word (“clawd” 
 - `--metrics-addr` enables Prometheus text endpoint; `--no-wake` bypasses wake word.
 
 ## PNPM helpers (all build Go, no JS runtime)
-- `pnpm brabble` — build then start daemon (default); extra args are passed through, e.g. `pnpm brabble --help`, `pnpm brabble status`.
+- `pnpm brabble` — build (whisper) then start daemon (default); extra args pass through, e.g. `pnpm brabble --help`, `pnpm brabble status`.
 - `pnpm start|stop|restart` — lifecycle wrappers.
-- `pnpm build` — compile to `bin/brabble`; `pnpm lint` — `golangci-lint run`; `pnpm format` — `gofmt -w .`; `pnpm test` — `go test ./...`.
+- `pnpm build` — whisper build to `bin/brabble`; `pnpm build-stub` — stub build without audio deps; `pnpm lint` — `golangci-lint run`; `pnpm format` — `gofmt -w .`; `pnpm test` — `go test ./...`.
 - Lint deps: `brew install golangci-lint`; CI runs gofmt+golangci-lint+tests (see `.github/workflows/ci.yml`).
 
 ## Config (auto-created at `~/.config/brabble/config.toml`)
