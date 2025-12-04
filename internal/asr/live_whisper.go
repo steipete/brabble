@@ -313,6 +313,8 @@ func selectDevice(preferred string, index int) (*portaudio.DeviceInfo, error) {
 }
 
 func int16ToBytes(samples []int16) []byte {
-	hdr := *(*[]byte)(unsafe.Pointer(&samples))
-	return hdr[:len(samples)*2]
+	if len(samples) == 0 {
+		return nil
+	}
+	return unsafe.Slice((*byte)(unsafe.Pointer(&samples[0])), len(samples)*2)
 }
