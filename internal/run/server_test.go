@@ -19,8 +19,8 @@ func TestSelectHookConfigMatchesWakeTokens(t *testing.T) {
 	if hk := selectHookConfig(cfg, "hello alpha"); hk == nil {
 		t.Fatalf("expected hook match for alpha")
 	}
-	if hk := selectHookConfig(cfg, "no wake here"); hk != nil {
-		t.Fatalf("expected no hook")
+	if hk := selectHookConfig(cfg, "no wake here"); hk != &cfg.Hooks[0] {
+		t.Fatalf("expected fallback to first hook")
 	}
 }
 

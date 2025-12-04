@@ -131,6 +131,7 @@ func (s *Server) handleSegment(ctx context.Context, seg asr.Segment) {
 	if text == "" {
 		return
 	}
+	original := text
 	s.lastHeard.Store(time.Now().UnixNano())
 	s.metrics.incHeard()
 	s.logger.Infof("heard: %q", text)
@@ -145,7 +146,7 @@ func (s *Server) handleSegment(ctx context.Context, seg asr.Segment) {
 		text = removeWakeWord(text, s.cfg.Wake.Word, s.cfg.Wake.Aliases)
 	}
 	// Select hook based on wake tokens (first match wins).
-	hk := selectHookConfig(s.cfg, text)
+	hk := selectHookConfig(s.cfg, original)
 	if hk == nil {
 		s.logger.Warn("no matching hook configured; skipping")
 		return
@@ -228,7 +229,11 @@ func matchesAny(token string, variants []string) bool {
 }
 
 func matchesHook(lowerText string, hk *config.HookConfig) bool {
-	tokens := make([]string, 0, len(hk.Wake)+len(hk.Aliases))
+	tokens := make([]string, 0, len(hk.Wake)+len(hk.Aliases)+1)
+	// If no explicit wake tokens are set, fall back to global wake word.
+	if len(hk.Wake) == 0 && hk.Command != "" {
+		// nothing to add here; explicit wake required below
+	}
 	for _, w := range hk.Wake {
 		w = strings.ToLower(strings.TrimSpace(w))
 		if w != "" {
@@ -240,6 +245,9 @@ func matchesHook(lowerText string, hk *config.HookConfig) bool {
 		if a != "" {
 			tokens = append(tokens, a)
 		}
+	}
+	if len(tokens) == 0 {
+		return false
 	}
 	for _, t := range tokens {
 		if strings.Contains(lowerText, t) {
@@ -266,6 +274,10 @@ func selectHookConfig(cfg *config.Config, text string) *config.HookConfig {
 		if matchesHook(lower, hk) {
 			return hk
 		}
+	}
+	// fallback: first hook if configured
+	if len(cfg.Hooks) > 0 {
+		return &cfg.Hooks[0]
 	}
 	return nil
 }
