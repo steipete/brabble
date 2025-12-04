@@ -73,6 +73,7 @@ type Config struct {
 	Logging struct {
 		Level  string `toml:"level"`  // debug, info, warn, error
 		Format string `toml:"format"` // text, json
+		Stdout bool   `toml:"stdout"` // also log to stdout
 	} `toml:"logging"`
 
 	Paths struct {
@@ -148,6 +149,7 @@ func Default() (*Config, error) {
 
 	cfg.Logging.Level = "info"
 	cfg.Logging.Format = "text"
+	cfg.Logging.Stdout = false
 
 	cfg.Paths.StateDir = stateDir
 	cfg.Paths.LogPath = filepath.Join(stateDir, "brabble.log")

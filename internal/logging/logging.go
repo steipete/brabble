@@ -33,6 +33,10 @@ func Configure(cfg *config.Config) (*logrus.Logger, error) {
 		MaxAge:     30,
 		Compress:   false,
 	}
-	logger.SetOutput(io.MultiWriter(os.Stdout, rotator))
+	if cfg.Logging.Stdout {
+		logger.SetOutput(io.MultiWriter(os.Stdout, rotator))
+	} else {
+		logger.SetOutput(rotator)
+	}
 	return logger, nil
 }

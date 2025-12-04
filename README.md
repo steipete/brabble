@@ -74,6 +74,7 @@ env = {}
 [logging]
 level = "info"   # debug|info|warn|error
 format = "text"  # text|json
+stdout = false   # also log to stdout (defaults to file-only)
 
 [metrics]
 enabled = false

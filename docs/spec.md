@@ -96,6 +96,11 @@ pid_path = ".../brabble.pid"
 [ui]
 status_tail = 10
 
+[logging]
+level = "info"   # debug|info|warn|error
+format = "text"  # text|json
+stdout = false   # also log to stdout when true
+
 [metrics]
 enabled = false
 addr = "127.0.0.1:9317"
