@@ -1,8 +1,9 @@
 package config
 
+// HookConfig defines a per-wake hook invocation entry.
 type HookConfig struct {
-	Wake        []string          `toml:"wake"`          // tokens to match (case-insensitive)
-	Aliases     []string          `toml:"aliases"`       // optional extra tokens
+	Wake        []string          `toml:"wake"`    // tokens to match (case-insensitive)
+	Aliases     []string          `toml:"aliases"` // optional extra tokens
 	Command     string            `toml:"command"`
 	Args        []string          `toml:"args"`
 	Prefix      string            `toml:"prefix"`

@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [0.1.0] - 2025-12-03
 ### Added
 - Daemon with PID + UNIX socket; lifecycle commands (`start|stop|restart|status|tail-log|test-hook`).
-- Audio pipeline (whisper build): PortAudio capture, WebRTC VAD, whisper.cpp transcription, wake word (“clawd”), partial flush segments (flagged, not hooked).
+- Audio pipeline: PortAudio capture, WebRTC VAD, whisper.cpp transcription, wake word (“clawd”), partial flush segments (flagged, not hooked).
 - Mic management via `mic list|set` (aliases `mics`/`microphone`, supports `--index`); model management (`models list|download|set`), setup downloads default model.
 - Hook runner to `../warelay send` with prefix, envs, cooldown, timeout, queue, PII redaction toggle.
 - Config defaults + logging level/format, metrics endpoint, transcript logging toggle.

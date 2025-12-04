@@ -5,7 +5,7 @@ Always-on local voice daemon that listens via microphone, detects a wake word, t
 
 ## Scope
 - **Targets**: macOS (Apple Silicon/Intel). Linux possible later.
-- **ASR**: whisper.cpp via Go bindings (enabled with `-tags whisper`) using quantized medium/large models; stub build uses stdin.
+- **ASR**: whisper.cpp via Go bindings using quantized medium/large models (required).
 - **VAD**: WebRTC VAD (current default); Silero VAD via onnxruntime remains optional future work.
 - **Wake word**: Configurable, default “clawd”. Optional disable.
 - **Hook**: Local shell command with prefix, env vars, cooldown, and payload on argv.
@@ -32,7 +32,7 @@ Always-on local voice daemon that listens via microphone, detects a wake word, t
 - `brabble restart [-c path]` stop then start (best effort).
 - `brabble status [-c path]` shows running?, uptime, last N transcripts.
 - `brabble tail-log [-c path]` prints last 50 log lines.
-- `brabble mic list` enumerates mics (whisper build).
+- `brabble mic list` enumerates mics.
 - `brabble mic set [--index N] "<name>" [-c path]` writes preferred mic/index to config.
 - `brabble models list|download|set` manage whisper models.
 - `brabble setup` download default model and update config.
@@ -148,10 +148,10 @@ Rules:
 - PID file guards double start; removed on clean exit.
 - SIGTERM/SIGINT trigger graceful shutdown: stop audio, flush pending, close socket.
 - Control socket is removed on start and shutdown to avoid stale sockets.
-- Doctor command checks config/model/hook binary presence and PortAudio availability (with whisper build).
+- Doctor command checks config/model/hook binary presence and PortAudio availability.
 - launchd helper writes a user plist for autostart on macOS.
 - launchd supports custom env via `brabble service install --env KEY=VAL`; helper prints kickstart/bootout commands.
-- CI: GitHub Actions runs lint/test on Linux and whisper-tag build on macOS with PortAudio installed.
+- CI: GitHub Actions runs lint/test on Linux and a macOS build with PortAudio + whisper.cpp installed.
 - Setup command fetches default whisper model if missing.
 - Models command supports listing known models, downloading into state dir, and setting `asr.model_path`.
 - Optional `/metrics` endpoint (Prometheus text) gated by config.
@@ -159,30 +159,28 @@ Rules:
 - Logging config (level/format) with env overrides `BRABBLE_LOG_LEVEL`, `BRABBLE_LOG_FORMAT`.
 - Hook PII redaction toggle; transcript logging toggle.
 
-## Audio & ASR Implementation Notes (to be filled)
-- Replace stdin stub by implementing `internal/asr/whisper_whisper.go` using whisper.cpp Go bindings; build with `-tags whisper`.
+## Audio & ASR Implementation Notes
 - Audio capture: PortAudio/CoreAudio, expose device enumeration and selection for `mic list`.
 - VAD: default WebRTC VAD with `silence_ms`; optional Silero VAD via onnxruntime for robustness.
-- Wake word: initial pass can be string match on transcribed text; optional Porcupine/keyword spotter before ASR for lower cost.
+- Wake word: initial pass is string match on transcribed text; optional Porcupine/keyword spotter before ASR for lower cost.
 
-## Build Flavors
-- **Stub** (default): `go build ./cmd/brabble` — uses stdin recognizer; useful for wiring tests/control without audio deps.
-- **Whisper**:
-  1. Build whisper.cpp once (Metal+BLAS):
-     ```sh
-     git clone https://github.com/ggerganov/whisper.cpp.git /tmp/whisper.cpp-build
-     cmake -S /tmp/whisper.cpp-build -B /tmp/whisper.cpp-build/build -DGGML_METAL=ON -DGGML_BLAS=ON
-     cmake --build /tmp/whisper.cpp-build/build --target whisper
-     sudo mkdir -p /usr/local/lib/whisper /usr/local/include/whisper
-     sudo cp /tmp/whisper.cpp-build/build/src/libwhisper.dylib /tmp/whisper.cpp-build/build/ggml/src/libggml*.dylib /tmp/whisper.cpp-build/build/ggml/src/ggml-metal/libggml-metal.dylib /tmp/whisper.cpp-build/build/ggml/src/ggml-blas/libggml-blas.dylib /usr/local/lib/whisper/
-     sudo cp -R /tmp/whisper.cpp-build/include/* /tmp/whisper.cpp-build/ggml/include/* /usr/local/include/whisper/
-     ```
-  2. Build Go binary:
-     ```sh
-     export CGO_CFLAGS='-I/usr/local/include/whisper'
-     export CGO_LDFLAGS='-L/usr/local/lib/whisper -Wl,-rpath,/usr/local/lib/whisper -lwhisper -lggml -lggml-base -lggml-cpu -lggml-metal -lggml-blas -framework Accelerate -framework Metal -framework Foundation -framework CoreGraphics'
-     go build -tags whisper -o bin/brabble-whisper ./cmd/brabble
-     ```
+## Build
+- Build whisper.cpp once (Metal+BLAS):
+  ```sh
+  git clone https://github.com/ggerganov/whisper.cpp.git /tmp/whisper.cpp-build
+  cmake -S /tmp/whisper.cpp-build -B /tmp/whisper.cpp-build/build -DGGML_METAL=ON -DGGML_BLAS=ON
+  cmake --build /tmp/whisper.cpp-build/build --target whisper
+  sudo mkdir -p /usr/local/lib/whisper /usr/local/include/whisper
+  sudo cp /tmp/whisper.cpp-build/build/src/libwhisper.dylib /tmp/whisper.cpp-build/build/ggml/src/libggml*.dylib /tmp/whisper.cpp-build/build/ggml/src/ggml-metal/libggml-metal.dylib /tmp/whisper.cpp-build/build/ggml/src/ggml-blas/libggml-blas.dylib /usr/local/lib/whisper/
+  sudo cp -R /tmp/whisper.cpp-build/include/* /tmp/whisper.cpp-build/ggml/include/* /usr/local/include/whisper/
+  ```
+- Build Go binary:
+  ```sh
+  export CGO_CFLAGS='-I/usr/local/include/whisper'
+  export CGO_LDFLAGS='-L/usr/local/lib/whisper'
+  go build -o bin/brabble ./cmd/brabble
+  install_name_tool -add_rpath /usr/local/lib/whisper bin/brabble
+  ```
 
 ## Dependencies
 - Go 1.25+

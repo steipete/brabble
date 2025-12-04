@@ -1,5 +1,3 @@
-//go:build whisper
-
 package asr
 
 import (
@@ -49,7 +47,7 @@ func newWhisperRecognizer(cfg *config.Config, logger *logrus.Logger) (Recognizer
 	}
 	model, err := whisper.New(cfg.ASR.ModelPath)
 	if err != nil {
-		portaudio.Terminate()
+		_ = portaudio.Terminate()
 		return nil, fmt.Errorf("load model: %w", err)
 	}
 	if err := warmup(model, cfg, logger); err != nil {
@@ -57,13 +55,13 @@ func newWhisperRecognizer(cfg *config.Config, logger *logrus.Logger) (Recognizer
 	}
 	v, err := vad.New()
 	if err != nil {
-		model.Close()
-		portaudio.Terminate()
+		_ = model.Close()
+		_ = portaudio.Terminate()
 		return nil, fmt.Errorf("vad init: %w", err)
 	}
 	if err := v.SetMode(cfg.VAD.Aggressiveness); err != nil {
-		model.Close()
-		portaudio.Terminate()
+		_ = model.Close()
+		_ = portaudio.Terminate()
 		return nil, fmt.Errorf("vad mode: %w", err)
 	}
 	return &whisperRecognizer{
@@ -75,8 +73,8 @@ func newWhisperRecognizer(cfg *config.Config, logger *logrus.Logger) (Recognizer
 }
 
 func (r *whisperRecognizer) Run(ctx context.Context, out chan<- Segment) error {
-	defer r.model.Close()
-	defer portaudio.Terminate()
+	defer func() { _ = r.model.Close() }()
+	defer func() { _ = portaudio.Terminate() }()
 
 	frameSamples := r.cfg.Audio.SampleRate * r.cfg.Audio.FrameMS / 1000
 	if ok := r.vad.ValidRateAndFrameLength(r.cfg.Audio.SampleRate, frameSamples); !ok {
@@ -128,7 +126,7 @@ func (r *whisperRecognizer) captureLoop(ctx context.Context, stream *portaudio.S
 	if err := stream.Start(); err != nil {
 		return fmt.Errorf("start stream: %w", err)
 	}
-	defer stream.Stop()
+	defer func() { _ = stream.Stop() }()
 
 	var (
 		chunk           []int16

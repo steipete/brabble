@@ -1,5 +1,3 @@
-//go:build whisper
-
 package control
 
 import (
@@ -21,7 +19,7 @@ import (
 func NewTranscribeCmd(cfgPath *string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "transcribe <wavfile>",
-		Short: "Transcribe a WAV file (whisper build)",
+		Short: "Transcribe a WAV file",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := config.Load(*cfgPath)
@@ -46,7 +44,8 @@ func NewTranscribeCmd(cfgPath *string) *cobra.Command {
 				return err
 			}
 			txt = strings.TrimSpace(txt)
-			fmt.Fprintln(cmd.OutOrStdout(), txt)
+			rawTxt := txt
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), txt)
 
 			if !wantHook {
 				return nil
@@ -59,11 +58,16 @@ func NewTranscribeCmd(cfgPath *string) *cobra.Command {
 			if cfg.Wake.Enabled && !noWake {
 				txt = removeWakeWordLocal(txt, cfg.Wake.Word)
 			}
-			if len(txt) < cfg.Hook.MinChars {
-				return fmt.Errorf("skipped: len(text)=%d < min_chars=%d", len(txt), cfg.Hook.MinChars)
+			hk := hook.SelectHookConfig(cfg, rawTxt)
+			if hk == nil {
+				return fmt.Errorf("no hook configured; add [[hooks]] entries")
+			}
+			if hk.MinChars > 0 && len(txt) < hk.MinChars {
+				return fmt.Errorf("skipped: len(text)=%d < min_chars=%d", len(txt), hk.MinChars)
 			}
 
 			r := hook.NewRunner(cfg, logger)
+			r.SelectHook(hk)
 			if !r.ShouldRun() {
 				return fmt.Errorf("hook on cooldown")
 			}
@@ -80,7 +84,7 @@ func runWhisperOnce(cfg *config.Config, logger *logrus.Logger, samples []float32
 	if err != nil {
 		return "", err
 	}
-	defer model.Close()
+	defer func() { _ = model.Close() }()
 	ctx, err := model.NewContext()
 	if err != nil {
 		return "", err

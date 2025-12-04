@@ -14,6 +14,3 @@ test:
 
 build:
 	go build ./cmd/brabble
-
-build-whisper:
-	go build -tags whisper ./cmd/brabble

@@ -146,7 +146,7 @@ func (s *Server) handleSegment(ctx context.Context, seg asr.Segment) {
 		text = removeWakeWord(text, s.cfg.Wake.Word, s.cfg.Wake.Aliases)
 	}
 	// Select hook based on wake tokens (first match wins).
-	hk := selectHookConfig(s.cfg, original)
+	hk := hook.SelectHookConfig(s.cfg, original)
 	if hk == nil {
 		s.logger.Warn("no matching hook configured; skipping")
 		return
@@ -228,35 +228,6 @@ func matchesAny(token string, variants []string) bool {
 	return false
 }
 
-func matchesHook(lowerText string, hk *config.HookConfig) bool {
-	tokens := make([]string, 0, len(hk.Wake)+len(hk.Aliases)+1)
-	// If no explicit wake tokens are set, fall back to global wake word.
-	if len(hk.Wake) == 0 && hk.Command != "" {
-		// nothing to add here; explicit wake required below
-	}
-	for _, w := range hk.Wake {
-		w = strings.ToLower(strings.TrimSpace(w))
-		if w != "" {
-			tokens = append(tokens, w)
-		}
-	}
-	for _, a := range hk.Aliases {
-		a = strings.ToLower(strings.TrimSpace(a))
-		if a != "" {
-			tokens = append(tokens, a)
-		}
-	}
-	if len(tokens) == 0 {
-		return false
-	}
-	for _, t := range tokens {
-		if strings.Contains(lowerText, t) {
-			return true
-		}
-	}
-	return false
-}
-
 func hookQueueSize(cfg *config.Config) int {
 	maxQ := 16
 	for i := range cfg.Hooks {
@@ -265,13 +236,6 @@ func hookQueueSize(cfg *config.Config) int {
 		}
 	}
 	return maxQ
-}
-
-func selectHookConfig(cfg *config.Config, text string) *config.HookConfig {
-	if len(cfg.Hooks) == 0 {
-		return nil
-	}
-	return &cfg.Hooks[0]
 }
 
 func (s *Server) recordTranscript(text string) {

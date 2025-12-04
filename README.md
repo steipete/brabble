@@ -3,9 +3,9 @@
 Always-on, local-only voice daemon for macOS. Hears your wake word (“clawd” by default), transcribes with whisper.cpp, then fires a configurable hook (user-defined, e.g., warelay heartbeat). Written in Go; ships with a daemon lifecycle, status socket, and launchd helper.
 
 ## Quick start
-- Requirements (full audio build): Go 1.25+, `brew install portaudio pkg-config`, a whisper.cpp model.
+- Requirements: Go 1.25+, `brew install portaudio pkg-config`, a whisper.cpp model.
 - One-liner: `pnpm brabble setup && pnpm start` (downloads medium Q5_1, writes config, starts daemon).
-- Foreground test without audio deps: `go run ./cmd/brabble serve` then type lines containing “clawd”.
+- Foreground run: `go run ./cmd/brabble serve` (mic + PortAudio required).
 
 ## CLI surface
 - `start | stop | restart` — daemon lifecycle (PID + UNIX socket).
@@ -19,9 +19,9 @@ Always-on, local-only voice daemon for macOS. Hears your wake word (“clawd” 
 - `--metrics-addr` enables Prometheus text endpoint; `--no-wake` bypasses wake word.
 
 ## PNPM helpers (all build Go, no JS runtime)
-- `pnpm brabble` — build (whisper) then start daemon (default); extra args pass through, e.g. `pnpm brabble --help`, `pnpm brabble status`.
+- `pnpm brabble` — build then start daemon (default); extra args pass through, e.g. `pnpm brabble --help`, `pnpm brabble status`.
 - `pnpm start|stop|restart` — lifecycle wrappers.
-- `pnpm build` — whisper build to `bin/brabble`; `pnpm build-stub` — stub build without audio deps; `pnpm lint` — `golangci-lint run`; `pnpm format` — `gofmt -w .`; `pnpm test` — `go test ./...`.
+- `pnpm build` — build to `bin/brabble`; `pnpm lint` — `golangci-lint run`; `pnpm format` — `gofmt -w .`; `pnpm test` — `go test ./...`.
 - Lint deps: `brew install golangci-lint`; CI runs gofmt+golangci-lint+tests (see `.github/workflows/ci.yml`).
 
 ## File-based testing
@@ -118,13 +118,14 @@ State & logs: `~/Library/Application Support/brabble/` (pid, socket, logs, trans
 
 ## Development / testing
 - Go style: gofmt tabs (default). `golangci-lint` config lives at `.golangci.yml`.
-- Tests: `go test ./...` (stub ASR) plus config/env/hook coverage.
-- Whisper build: build whisper.cpp once, then:
+- Tests: `go test ./...` plus config/env/hook coverage.
+- Build: build whisper.cpp once, then:
   ```sh
   # headers + libs placed in /usr/local/{include,lib}/whisper (see docs/spec.md)
   export CGO_CFLAGS='-I/usr/local/include/whisper'
-  export CGO_LDFLAGS='-L/usr/local/lib/whisper -Wl,-rpath,/usr/local/lib/whisper -lwhisper -lggml -lggml-base -lggml-cpu -lggml-metal -lggml-blas -framework Accelerate -framework Metal -framework Foundation -framework CoreGraphics'
-  go build -tags whisper -o bin/brabble-whisper ./cmd/brabble
+  export CGO_LDFLAGS='-L/usr/local/lib/whisper'
+  go build -o bin/brabble ./cmd/brabble
+  install_name_tool -add_rpath /usr/local/lib/whisper bin/brabble
   ```
 - CI: GitHub Actions (`.github/workflows/ci.yml`) runs gofmt check, golangci-lint, and go test.
 

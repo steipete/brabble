@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"brabble/internal/config"
+	"brabble/internal/hook"
 )
 
 func TestSelectHookConfigMatchesWakeTokens(t *testing.T) {
@@ -13,13 +14,13 @@ func TestSelectHookConfigMatchesWakeTokens(t *testing.T) {
 		{Wake: []string{"clawd", "claude", "cloud"}, Command: "/bin/echo"},
 	}
 
-	if hk := selectHookConfig(cfg, "Claude can you hear me"); hk == nil {
+	if hk := hook.SelectHookConfig(cfg, "Claude can you hear me"); hk == nil {
 		t.Fatalf("expected hook match for Claude")
 	}
-	if hk := selectHookConfig(cfg, "hello alpha"); hk == nil {
+	if hk := hook.SelectHookConfig(cfg, "hello alpha"); hk == nil {
 		t.Fatalf("expected hook match for alpha")
 	}
-	if hk := selectHookConfig(cfg, "no wake here"); hk != &cfg.Hooks[0] {
+	if hk := hook.SelectHookConfig(cfg, "no wake here"); hk != &cfg.Hooks[0] {
 		t.Fatalf("expected fallback to first hook")
 	}
 }

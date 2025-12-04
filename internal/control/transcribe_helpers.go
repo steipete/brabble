@@ -50,7 +50,7 @@ func readWAV16kMono(path string) ([]float32, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	dec := wav.NewDecoder(f)
 	if !dec.IsValidFile() {
 		return nil, fmt.Errorf("invalid WAV: %s", path)

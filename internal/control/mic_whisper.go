@@ -1,5 +1,3 @@
-//go:build whisper
-
 package control
 
 import (
@@ -12,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewMicCmd groups mic subcommands (whisper build).
+// NewMicCmd groups mic subcommands.
 func NewMicCmd(cfgPath *string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "mic",
@@ -33,7 +31,9 @@ func newMicListCmd() *cobra.Command {
 			if err := portaudio.Initialize(); err != nil {
 				return fmt.Errorf("portaudio init: %w", err)
 			}
-			defer portaudio.Terminate()
+			defer func() {
+				_ = portaudio.Terminate()
+			}()
 
 			devs, err := portaudio.Devices()
 			if err != nil {
