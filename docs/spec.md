@@ -143,7 +143,22 @@ Rules:
 
 ## Build Flavors
 - **Stub** (default): `go build ./cmd/brabble` — uses stdin recognizer; useful for wiring tests/control without audio deps.
-- **Whisper**: `go build -tags whisper ./cmd/brabble` after installing PortAudio and downloading a whisper.cpp model.
+- **Whisper**:
+  1. Build whisper.cpp once (Metal+BLAS):
+     ```sh
+     git clone https://github.com/ggerganov/whisper.cpp.git /tmp/whisper.cpp-build
+     cmake -S /tmp/whisper.cpp-build -B /tmp/whisper.cpp-build/build -DGGML_METAL=ON -DGGML_BLAS=ON
+     cmake --build /tmp/whisper.cpp-build/build --target whisper
+     sudo mkdir -p /usr/local/lib/whisper /usr/local/include/whisper
+     sudo cp /tmp/whisper.cpp-build/build/src/libwhisper.dylib /tmp/whisper.cpp-build/build/ggml/src/libggml*.dylib /tmp/whisper.cpp-build/build/ggml/src/ggml-metal/libggml-metal.dylib /tmp/whisper.cpp-build/build/ggml/src/ggml-blas/libggml-blas.dylib /usr/local/lib/whisper/
+     sudo cp -R /tmp/whisper.cpp-build/include/* /tmp/whisper.cpp-build/ggml/include/* /usr/local/include/whisper/
+     ```
+  2. Build Go binary:
+     ```sh
+     export CGO_CFLAGS='-I/usr/local/include/whisper'
+     export CGO_LDFLAGS='-L/usr/local/lib/whisper -Wl,-rpath,/usr/local/lib/whisper -lwhisper -lggml -lggml-base -lggml-cpu -lggml-metal -lggml-blas -framework Accelerate -framework Metal -framework Foundation -framework CoreGraphics'
+     go build -tags whisper -o bin/brabble-whisper ./cmd/brabble
+     ```
 
 ## Dependencies
 - Go 1.25+

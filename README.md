@@ -109,7 +109,13 @@ State & logs: `~/Library/Application Support/brabble/` (pid, socket, logs, trans
 ## Development / testing
 - Go style: gofmt tabs (default). `golangci-lint` config lives at `.golangci.yml`.
 - Tests: `go test ./...` (stub ASR) plus config/env/hook coverage.
-- Whisper build: `go build -tags whisper ./cmd/brabble` after building whisper.cpp dylibs (see `docs/spec.md`).
+- Whisper build: build whisper.cpp once, then:
+  ```sh
+  # headers + libs placed in /usr/local/{include,lib}/whisper (see docs/spec.md)
+  export CGO_CFLAGS='-I/usr/local/include/whisper'
+  export CGO_LDFLAGS='-L/usr/local/lib/whisper -Wl,-rpath,/usr/local/lib/whisper -lwhisper -lggml -lggml-base -lggml-cpu -lggml-metal -lggml-blas -framework Accelerate -framework Metal -framework Foundation -framework CoreGraphics'
+  go build -tags whisper -o bin/brabble-whisper ./cmd/brabble
+  ```
 - CI: GitHub Actions (`.github/workflows/ci.yml`) runs gofmt check, golangci-lint, and go test.
 
 ## Tagline & emoji
