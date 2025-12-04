@@ -24,6 +24,12 @@ Always-on, local-only voice daemon for macOS. Hears your wake word (“clawd” 
 - `pnpm build` — whisper build to `bin/brabble`; `pnpm build-stub` — stub build without audio deps; `pnpm lint` — `golangci-lint run`; `pnpm format` — `gofmt -w .`; `pnpm test` — `go test ./...`.
 - Lint deps: `brew install golangci-lint`; CI runs gofmt+golangci-lint+tests (see `.github/workflows/ci.yml`).
 
+## File-based testing
+- Transcribe without the daemon: `pnpm brabble transcribe samples/clip.wav`
+- Send through your hook (wake+min_chars enforced): `pnpm brabble transcribe samples/clip.wav --hook`
+- Ignore wake gating for a file: `pnpm brabble transcribe samples/clip.wav --hook --no-wake`
+- Input: any WAV; we downmix to mono and resample to 16 kHz internally.
+
 ## Config (auto-created at `~/.config/brabble/config.toml`)
 ```toml
 [audio]
