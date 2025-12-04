@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "CGO_CFLAGS='-I/usr/local/include/whisper' CGO_LDFLAGS='-L/usr/local/lib/whisper -Wl,-rpath,/usr/local/lib/whisper -lwhisper -lggml -lggml-base -lggml-cpu -lggml-metal -lggml-blas -framework Accelerate -framework Metal -framework Foundation -framework CoreGraphics' go build -tags whisper -o bin/brabble ./cmd/brabble",
+    "build": "CGO_CFLAGS='-I/usr/local/include/whisper' CGO_LDFLAGS='-L/usr/local/lib/whisper' go build -tags whisper -o bin/brabble ./cmd/brabble",
     "build-stub": "go build -o bin/brabble ./cmd/brabble",
     "start": "pnpm run build && ./bin/brabble start",
     "brabble": "pnpm run build && ./scripts/pnpm-brabble.sh",
