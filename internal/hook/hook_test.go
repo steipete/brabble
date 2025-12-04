@@ -12,10 +12,12 @@ import (
 
 func TestShouldRunCooldown(t *testing.T) {
 	cfg, _ := config.Default()
-	cfg.Hook.Command = "/bin/echo"
-	cfg.Hook.Args = nil
-	cfg.Hook.CooldownSec = 0.5
+	cfg.Hooks = []config.HookConfig{{
+		Command:     "/bin/echo",
+		CooldownSec: 0.5,
+	}}
 	r := NewRunner(cfg, logrus.New())
+	r.SelectHook(&cfg.Hooks[0])
 
 	if !r.ShouldRun() {
 		t.Fatalf("first call should run")
@@ -34,12 +36,14 @@ func TestShouldRunCooldown(t *testing.T) {
 
 func TestRunUsesPrefixAndEnv(t *testing.T) {
 	cfg, _ := config.Default()
-	cfg.Hook.Command = "/bin/echo"
-	cfg.Hook.Args = []string{}
-	cfg.Hook.Prefix = "pref:"
-	cfg.Hook.CooldownSec = 0
+	cfg.Hooks = []config.HookConfig{{
+		Command: "/bin/echo",
+		Args:    []string{},
+		Prefix:  "pref:",
+	}}
 
 	r := NewRunner(cfg, logrus.New())
+	r.SelectHook(&cfg.Hooks[0])
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	if err := r.Run(ctx, Job{Text: "hello", Timestamp: time.Now()}); err != nil {

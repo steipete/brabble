@@ -45,26 +45,25 @@ func NewRunner(cfg *config.Config, logger *logrus.Logger) *Runner {
 
 // ShouldRun returns whether cooldown allows a new hook.
 func (r *Runner) ShouldRun() bool {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	hk := r.selectedHook()
+	hk, last := r.state()
+	if hk == nil {
+		return false
+	}
 	if hk.CooldownSec <= 0 {
 		return true
 	}
-	return time.Since(r.lastRun).Seconds() >= hk.CooldownSec
+	return time.Since(last).Seconds() >= hk.CooldownSec
 }
 
 // Run executes the configured command with text payload.
 func (r *Runner) Run(ctx context.Context, job Job) error {
-	r.mu.Lock()
-	r.lastRun = time.Now()
-	r.mu.Unlock()
-
 	hk := r.selectedHook()
-
+	if hk == nil {
+		return fmt.Errorf("no hook selected")
+	}
 	cmdStr := hk.Command
 	if cmdStr == "" {
-		return fmt.Errorf("no hook.command configured")
+		return fmt.Errorf("hook command not configured")
 	}
 	args := append([]string{}, hk.Args...)
 
@@ -97,6 +96,10 @@ func (r *Runner) Run(ctx context.Context, job Job) error {
 	if err != nil {
 		return fmt.Errorf("hook failed: %w", err)
 	}
+
+	r.mu.Lock()
+	r.lastRun = time.Now()
+	r.mu.Unlock()
 	return nil
 }
 
@@ -121,19 +124,13 @@ func (r *Runner) selectedHook() *config.HookConfig {
 	if r.activeHook != nil {
 		return r.activeHook
 	}
-	// fallback to legacy single hook
-	return &config.HookConfig{
-		Command:     r.cfg.Hook.Command,
-		Args:        r.cfg.Hook.Args,
-		Prefix:      r.cfg.Hook.Prefix,
-		CooldownSec: r.cfg.Hook.CooldownSec,
-		MinChars:    r.cfg.Hook.MinChars,
-		MaxLatency:  r.cfg.Hook.MaxLatencyMS,
-		QueueSize:   r.cfg.Hook.QueueSize,
-		TimeoutSec:  r.cfg.Hook.TimeoutSec,
-		Env:         r.cfg.Hook.Env,
-		RedactPII:   r.cfg.Hook.RedactPII,
-	}
+	return nil
+}
+
+func (r *Runner) state() (*config.HookConfig, time.Time) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.activeHook, r.lastRun
 }
 
 var (

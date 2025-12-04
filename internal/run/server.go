@@ -65,7 +65,7 @@ func Serve(cfg *config.Config, logger *logrus.Logger) error {
 		hook:        hook.NewRunner(cfg, logger),
 		startedAt:   time.Now(),
 		transcripts: make([]control.Transcript, 0, cfg.UI.StatusTail),
-		hookCh:      make(chan hook.Job, max(1, cfg.Hook.QueueSize)),
+		hookCh:      make(chan hook.Job, max(1, hookQueueSize(cfg))),
 	}
 	srv.metrics.reset()
 
@@ -144,10 +144,6 @@ func (s *Server) handleSegment(ctx context.Context, seg asr.Segment) {
 		s.logger.Infof("wake word matched: %q", s.cfg.Wake.Word)
 		text = removeWakeWord(text, s.cfg.Wake.Word, s.cfg.Wake.Aliases)
 	}
-	if len(text) < s.cfg.Hook.MinChars || seg.Partial {
-		return
-	}
-
 	// Select hook based on wake tokens (first match wins).
 	hk := selectHookConfig(s.cfg, text)
 	if hk == nil {
@@ -155,6 +151,13 @@ func (s *Server) handleSegment(ctx context.Context, seg asr.Segment) {
 		return
 	}
 	s.hook.SelectHook(hk)
+
+	if seg.Partial {
+		return
+	}
+	if hk.MinChars > 0 && len(text) < hk.MinChars {
+		return
+	}
 
 	if !s.hook.ShouldRun() {
 		s.logger.Debug("hook skipped (cooldown)")
@@ -224,24 +227,44 @@ func matchesAny(token string, variants []string) bool {
 	return false
 }
 
-func selectHookConfig(cfg *config.Config, text string) *config.HookConfig {
-	if len(cfg.Hooks) == 0 {
-		return nil
+func matchesHook(lowerText string, hk *config.HookConfig) bool {
+	tokens := make([]string, 0, len(hk.Wake)+len(hk.Aliases))
+	for _, w := range hk.Wake {
+		w = strings.ToLower(strings.TrimSpace(w))
+		if w != "" {
+			tokens = append(tokens, w)
+		}
 	}
+	for _, a := range hk.Aliases {
+		a = strings.ToLower(strings.TrimSpace(a))
+		if a != "" {
+			tokens = append(tokens, a)
+		}
+	}
+	for _, t := range tokens {
+		if strings.Contains(lowerText, t) {
+			return true
+		}
+	}
+	return false
+}
+
+func hookQueueSize(cfg *config.Config) int {
+	maxQ := 16
+	for i := range cfg.Hooks {
+		if cfg.Hooks[i].QueueSize > maxQ {
+			maxQ = cfg.Hooks[i].QueueSize
+		}
+	}
+	return maxQ
+}
+
+func selectHookConfig(cfg *config.Config, text string) *config.HookConfig {
 	lower := strings.ToLower(text)
 	for i := range cfg.Hooks {
 		hk := &cfg.Hooks[i]
-		var tokens []string
-		for _, w := range hk.Wake {
-			tokens = append(tokens, strings.ToLower(strings.TrimSpace(w)))
-		}
-		for _, a := range hk.Aliases {
-			tokens = append(tokens, strings.ToLower(strings.TrimSpace(a)))
-		}
-		for _, t := range tokens {
-			if t != "" && strings.Contains(lower, t) {
-				return hk
-			}
+		if matchesHook(lower, hk) {
+			return hk
 		}
 	}
 	return nil
