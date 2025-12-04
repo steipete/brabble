@@ -116,5 +116,4 @@ State & logs: `~/Library/Application Support/brabble/` (pid, socket, logs, trans
   ```
 - CI: GitHub Actions (`.github/workflows/ci.yml`) runs gofmt check, golangci-lint, and go test.
 
-## Tagline & emoji
-🎙️ + “Open hailing frequencies… and run the command.” (Star Trek nod). Feel free to swap the emoji in `README.md` if you prefer 🎧, 🖖, 🚀, 📡, 🔊.
+🎙️ Brabble. Make it say.
