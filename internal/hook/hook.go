@@ -89,6 +89,14 @@ func (r *Runner) Run(ctx context.Context, job Job) error {
 	cmd.Env = append(cmd.Env, fmt.Sprintf("BRABBLE_TEXT=%s", text))
 	cmd.Env = append(cmd.Env, fmt.Sprintf("BRABBLE_PREFIX=%s", prefix))
 
+	r.logger.Info("hook exec",
+		"cmd", cmdStr,
+		"args", args,
+		"timeout_sec", hk.TimeoutSec,
+		"env_extra", hk.Env,
+		"redact_pii", hk.RedactPII,
+	)
+
 	out, err := cmd.CombinedOutput()
 	if len(out) > 0 {
 		r.logger.Infof("hook output: %s", strings.TrimSpace(string(out)))
