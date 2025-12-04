@@ -139,6 +139,8 @@ func (r *whisperRecognizer) captureLoop(ctx context.Context, stream *portaudio.S
 		silenceDur      = time.Duration(r.cfg.VAD.SilenceMS) * time.Millisecond
 		maxSegDur       = time.Duration(r.cfg.VAD.MaxSegmentMS) * time.Millisecond
 		partialFlush    = time.Duration(r.cfg.VAD.PartialFlushMS) * time.Millisecond
+		sampleRate      = r.cfg.Audio.SampleRate
+		minSpeech       = time.Duration(r.cfg.VAD.MinSpeechMS) * time.Millisecond
 	)
 
 	for {
@@ -171,6 +173,10 @@ func (r *whisperRecognizer) captureLoop(ctx context.Context, stream *portaudio.S
 			lastVoice = time.Now()
 
 			if partialFlush > 0 && time.Since(lastPartialSent) >= partialFlush && len(chunk) > 0 {
+				chunkDur := time.Duration(len(chunk)) * time.Second / time.Duration(sampleRate)
+				if chunkDur < minSpeech {
+					continue
+				}
 				cpy := make([]int16, len(chunk))
 				copy(cpy, chunk)
 				select {
@@ -186,12 +192,15 @@ func (r *whisperRecognizer) captureLoop(ctx context.Context, stream *portaudio.S
 			now := time.Now()
 			if (now.Sub(lastVoice) >= silenceDur && len(chunk) > 0) ||
 				(maxSegDur > 0 && now.Sub(speechBegan) >= maxSegDur) {
-				cpy := make([]int16, len(chunk))
-				copy(cpy, chunk)
-				select {
-				case segments <- segmentChunk{pcm: cpy, partial: false}:
-				default:
-					r.logger.Warn("segment queue full, dropping segment")
+				chunkDur := time.Duration(len(chunk)) * time.Second / time.Duration(sampleRate)
+				if chunkDur >= minSpeech {
+					cpy := make([]int16, len(chunk))
+					copy(cpy, chunk)
+					select {
+					case segments <- segmentChunk{pcm: cpy, partial: false}:
+					default:
+						r.logger.Warn("segment queue full, dropping segment")
+					}
 				}
 				inSpeech = false
 				chunk = chunk[:0]
