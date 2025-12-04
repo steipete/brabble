@@ -69,6 +69,7 @@ Notable flags/env:
 	root.AddCommand(control.NewServiceRootCmd(cfgPath))
 	root.AddCommand(control.NewSetupCmd(cfgPath))
 	root.AddCommand(control.NewHealthCmd(cfgPath))
+	root.AddCommand(control.NewTranscribeCmd(cfgPath))
 	root.AddCommand(control.NewModelsCmd(cfgPath))
 
 	// Hidden internal serve command used by start.

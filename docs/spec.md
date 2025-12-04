@@ -37,6 +37,7 @@ Always-on local voice daemon that listens via microphone, detects a wake word, t
 - `brabble models list|download|set` manage whisper models.
 - `brabble setup` download default model and update config.
 - `brabble doctor` run dependency checks (hook, model, portaudio).
+- `brabble transcribe <wav>` transcribe a WAV file; `--hook` sends through configured hook; `--no-wake` skips wake gating.
 - `brabble health` ping the control socket.
 - `brabble service install|uninstall|status` manage launchd plist and print kickstart/bootout commands.
 - `brabble test-hook "text" [-c path]` invokes hook once with sample text.

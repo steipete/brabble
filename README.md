@@ -14,6 +14,7 @@ Always-on, local-only voice daemon for macOS. Hears your wake word (“clawd” 
 - `models list|download|set` — manage whisper.cpp models under `~/Library/Application Support/brabble/models`.
 - `setup` — download default model and update config; `doctor` — check deps/model/hook/portaudio.
 - `test-hook "text"` — invoke hook manually; `health` — ping daemon; `service install|uninstall|status` — launchd helper (prints kickstart/bootout commands).
+- `transcribe <wav>` — run whisper on a WAV file; add `--hook` to send it through your configured hook (respects wake/min_chars unless `--no-wake`).
 - Hidden internal: `serve` runs the foreground daemon (used by `start`/launchd).
 - `--metrics-addr` enables Prometheus text endpoint; `--no-wake` bypasses wake word.
 
