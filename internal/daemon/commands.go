@@ -133,9 +133,14 @@ func NewRestartCmd(cfgPath *string) *cobra.Command {
 		Short: "Restart brabble daemon",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			stopCmd := NewStopCmd(cfgPath)
-			_ = stopCmd.RunE(cmd, args) // ignore error if not running
+			_ = stopCmd.RunE(stopCmd, args) // ignore error if not running
+
+			if err := waitForShutdown(*cfgPath, 5*time.Second); err != nil {
+				return err
+			}
+
 			startCmd := NewStartCmd(cfgPath)
-			return startCmd.RunE(cmd, args)
+			return startCmd.RunE(startCmd, args)
 		},
 	}
 }
@@ -165,4 +170,27 @@ func readPID(path string) (int, error) {
 		return 0, err
 	}
 	return pid, nil
+}
+
+func waitForShutdown(cfgPath string, timeout time.Duration) error {
+	cfg, err := config.Load(cfgPath)
+	if err != nil {
+		return err
+	}
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		pid, err := readPID(cfg.Paths.PidPath)
+		if err != nil {
+			return nil // pid file gone
+		}
+		proc, _ := os.FindProcess(pid)
+		if proc != nil {
+			if err := proc.Signal(syscall.Signal(0)); err != nil {
+				_ = os.Remove(cfg.Paths.PidPath)
+				return nil
+			}
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	return fmt.Errorf("restart: daemon did not stop within %s", timeout)
 }
