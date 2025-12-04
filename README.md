@@ -23,6 +23,7 @@ Always-on, local-only voice daemon for macOS. Hears your wake word (“clawd” 
 - `pnpm brabble` — build then start daemon (default); extra args are passed through, e.g. `pnpm brabble --help`, `pnpm brabble status`.
 - `pnpm start|stop|restart` — lifecycle wrappers.
 - `pnpm build` — compile to `bin/brabble`; `pnpm lint` — `golangci-lint run`; `pnpm format` — `gofmt -w .`; `pnpm test` — `go test ./...`.
+- Lint deps: `brew install golangci-lint`; CI runs gofmt+golangci-lint+tests (see `.github/workflows/ci.yml`).
 
 ## Config (auto-created at `~/.config/brabble/config.toml`)
 ```toml
@@ -109,6 +110,7 @@ State & logs: `~/Library/Application Support/brabble/` (pid, socket, logs, trans
 - Go style: gofmt tabs (default). `golangci-lint` config lives at `.golangci.yml`.
 - Tests: `go test ./...` (stub ASR) plus config/env/hook coverage.
 - Whisper build: `go build -tags whisper ./cmd/brabble` after building whisper.cpp dylibs (see `docs/spec.md`).
+- CI: GitHub Actions (`.github/workflows/ci.yml`) runs gofmt check, golangci-lint, and go test.
 
 ## Tagline & emoji
 🎙️ + “Open hailing frequencies… and run the command.” (Star Trek nod). Feel free to swap the emoji in `README.md` if you prefer 🎧, 🖖, 🚀, 📡, 🔊.
