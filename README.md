@@ -127,6 +127,7 @@ State & logs: `~/Library/Application Support/brabble/` (pid, socket, logs, trans
   go build -o bin/brabble ./cmd/brabble
   install_name_tool -add_rpath /usr/local/lib/whisper bin/brabble
   ```
+- Models: defaults to `ggml-medium-q5_1.bin`; better latency/quality tradeoff `ggml-large-v3-turbo-q8_0.bin`; best quality `ggml-large-v3-turbo.bin`. Use `brabble models download <name>` then `brabble models set <name>`.
 - CI: GitHub Actions (`.github/workflows/ci.yml`) runs gofmt check, golangci-lint, and go test.
 
 🎙️ Brabble. Make it say.

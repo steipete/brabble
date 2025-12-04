@@ -16,9 +16,11 @@ import (
 
 // simple registry of known ggml models.
 var modelRegistry = map[string]string{
-	"ggml-small-q5_1.bin":    "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small-q5_1.bin",
-	"ggml-medium-q5_1.bin":   "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium-q5_1.bin",
-	"ggml-large-v3-q5_0.bin": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-q5_0.bin",
+	"ggml-small-q5_1.bin":          "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small-q5_1.bin",
+	"ggml-medium-q5_1.bin":         "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium-q5_1.bin",
+	"ggml-large-v3-q5_0.bin":       "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-q5_0.bin",
+	"ggml-large-v3-turbo-q8_0.bin": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q8_0.bin",
+	"ggml-large-v3-turbo.bin":      "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin",
 }
 
 // NewModelsCmd wires up the models subcommands (list/download/set).

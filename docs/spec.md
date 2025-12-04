@@ -182,6 +182,12 @@ Rules:
   install_name_tool -add_rpath /usr/local/lib/whisper bin/brabble
   ```
 
+## Models
+- Default: `ggml-medium-q5_1.bin` (good balance size/quality).
+- Better: `ggml-large-v3-turbo-q8_0.bin` (fast, higher quality).
+- Best: `ggml-large-v3-turbo.bin` (highest quality, largest).
+Use `brabble models download <name>` then `brabble models set <name>` to switch.
+
 ## Dependencies
 - Go 1.25+
 - Runtime libs (planned): PortAudio (macOS: `brew install portaudio`), whisper.cpp built as dylib or static via cgo, optional onnxruntime (Silero VAD), optional Porcupine wake word SDK.
