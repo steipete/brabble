@@ -135,7 +135,7 @@ func NewRestartCmd(cfgPath *string) *cobra.Command {
 			stopCmd := NewStopCmd(cfgPath)
 			_ = stopCmd.RunE(stopCmd, args) // ignore error if not running
 
-			if err := waitForShutdown(*cfgPath, 5*time.Second); err != nil {
+			if err := waitForShutdown(*cfgPath); err != nil {
 				return err
 			}
 
@@ -172,11 +172,12 @@ func readPID(path string) (int, error) {
 	return pid, nil
 }
 
-func waitForShutdown(cfgPath string, timeout time.Duration) error {
+func waitForShutdown(cfgPath string) error {
 	cfg, err := config.Load(cfgPath)
 	if err != nil {
 		return err
 	}
+	timeout := time.Duration(cfg.Daemon.StopTimeoutSec * float64(time.Second))
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
 		pid, err := readPID(cfg.Paths.PidPath)

@@ -1,7 +1,7 @@
 # Brabble Specification (macOS, Go)
 
 ## Purpose
-Always-on local voice daemon that listens via microphone, detects a wake word, transcribes speech, and triggers a configurable shell hook (default: `../warelay send "<prefix><text>"`). Optimized for offline use with a strong machine; runs as a controllable daemon with CLI surface.
+Always-on local voice daemon that listens via microphone, detects a wake word, transcribes speech, and triggers a configurable shell hook (user-defined). Optimized for offline use with a strong machine; runs as a controllable daemon with CLI surface.
 
 ## Scope
 - **Targets**: macOS (Apple Silicon/Intel). Linux possible later.

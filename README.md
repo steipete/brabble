@@ -1,6 +1,6 @@
 # 🎙️ Brabble — Open hailing frequencies… and run the command.
 
-Always-on, local-only voice daemon for macOS. Hears your wake word (“clawd” by default), transcribes with whisper.cpp, then fires a configurable hook (default: `../warelay send "Voice brabble from ${hostname}: <text>"`). Written in Go; ships with a daemon lifecycle, status socket, and launchd helper.
+Always-on, local-only voice daemon for macOS. Hears your wake word (“clawd” by default), transcribes with whisper.cpp, then fires a configurable hook (user-defined, e.g., warelay heartbeat). Written in Go; ships with a daemon lifecycle, status socket, and launchd helper.
 
 ## Quick start
 - Requirements (full audio build): Go 1.25+, `brew install portaudio pkg-config`, a whisper.cpp model.
