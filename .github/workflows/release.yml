@@ -18,17 +18,10 @@ jobs:
   goreleaser:
     runs-on: macos-14
     steps:
-      - name: Checkout (tag push)
-        if: ${{ github.event_name != 'workflow_dispatch' }}
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Checkout (manual tag)
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ inputs.tag }}
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -54,11 +47,18 @@ jobs:
           sudo cp -R /tmp/whisper.cpp-build/include/* /usr/local/include/whisper/
           sudo cp -R /tmp/whisper.cpp-build/ggml/include/* /usr/local/include/whisper/ || true
 
+      - name: Stash GoReleaser config
+        run: cp .goreleaser.yaml /tmp/.goreleaser.yaml
+
+      - name: Checkout release tag
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: git checkout ${{ inputs.tag }}
+
       - name: GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: latest
-          args: release --clean --config .goreleaser.yaml
+          args: release --clean --config /tmp/.goreleaser.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
