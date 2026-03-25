@@ -1,7 +1,6 @@
 package control
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -70,7 +69,7 @@ func NewTranscribeCmd(cfgPath *string) *cobra.Command {
 			if !r.ShouldRun() {
 				return fmt.Errorf("hook on cooldown")
 			}
-			return r.Run(context.Background(), hook.Job{Text: txt, Timestamp: time.Now()})
+			return r.Run(cmd.Context(), hook.Job{Text: txt, Timestamp: time.Now()})
 		},
 	}
 	cmd.Flags().Bool("hook", false, "also send through configured hook")

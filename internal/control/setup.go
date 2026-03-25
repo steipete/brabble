@@ -48,12 +48,15 @@ func NewSetupCmd(cfgPath *string) *cobra.Command {
 				}
 				defer func() { _ = out.Close() }()
 				if _, err := io.Copy(out, resp.Body); err != nil {
+					_ = os.Remove(tmp)
 					return err
 				}
 				if err := out.Close(); err != nil {
+					_ = os.Remove(tmp)
 					return err
 				}
 				if err := os.Rename(tmp, modelPath); err != nil {
+					_ = os.Remove(tmp)
 					return err
 				}
 				fmt.Println("model download complete")

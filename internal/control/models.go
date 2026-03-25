@@ -23,27 +23,38 @@ var modelRegistry = map[string]string{
 	"ggml-large-v3-turbo.bin":      "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin",
 }
 
+// modelDir returns the models directory from config state dir.
+func modelDir(cfg *config.Config) string {
+	return filepath.Join(cfg.Paths.StateDir, "models")
+}
+
 // NewModelsCmd wires up the models subcommands (list/download/set).
 func NewModelsCmd(cfgPath *string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "models",
 		Short: "List/download/set whisper models",
 	}
-	cmd.AddCommand(newModelsListCmd())
+	cmd.AddCommand(newModelsListCmd(cfgPath))
 	cmd.AddCommand(newModelsDownloadCmd(cfgPath))
 	cmd.AddCommand(newModelsSetCmd(cfgPath))
 	return cmd
 }
 
-func newModelsListCmd() *cobra.Command {
+func newModelsListCmd(cfgPath *string) *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
 		Short: "List known models and those present locally",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			home, _ := os.UserHomeDir()
-			modelDir := filepath.Join(home, "Library", "Application Support", "brabble", "models")
+			cfg, err := config.Load(*cfgPath)
+			if err != nil {
+				return err
+			}
+			mDir := modelDir(cfg)
 			local := map[string]bool{}
-			entries, _ := os.ReadDir(modelDir)
+			entries, err := os.ReadDir(mDir)
+			if err != nil && !os.IsNotExist(err) {
+				return fmt.Errorf("read model dir: %w", err)
+			}
 			for _, e := range entries {
 				if !e.IsDir() {
 					local[e.Name()] = true
@@ -72,13 +83,16 @@ func newModelsDownloadCmd(cfgPath *string) *cobra.Command {
 		Short: "Download a model from the registry",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg, err := config.Load(*cfgPath)
+			if err != nil {
+				return err
+			}
 			name := args[0]
 			url, ok := modelRegistry[name]
 			if !ok {
 				return fmt.Errorf("unknown model %q; run models list", name)
 			}
-			home, _ := os.UserHomeDir()
-			dest := filepath.Join(home, "Library", "Application Support", "brabble", "models", name)
+			dest := filepath.Join(modelDir(cfg), name)
 			if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
 				return err
 			}
@@ -98,12 +112,18 @@ func newModelsDownloadCmd(cfgPath *string) *cobra.Command {
 			}
 			defer func() { _ = out.Close() }()
 			if _, err := io.Copy(out, resp.Body); err != nil {
+				_ = os.Remove(tmp)
 				return err
 			}
 			if err := out.Close(); err != nil {
+				_ = os.Remove(tmp)
 				return err
 			}
-			return os.Rename(tmp, dest)
+			if err := os.Rename(tmp, dest); err != nil {
+				_ = os.Remove(tmp)
+				return err
+			}
+			return nil
 		},
 	}
 }
@@ -119,11 +139,9 @@ func newModelsSetCmd(cfgPath *string) *cobra.Command {
 				return err
 			}
 			val := args[0]
-			home, _ := os.UserHomeDir()
-			modelDir := filepath.Join(home, "Library", "Application Support", "brabble", "models")
-			// if short name, resolve in modelDir
+			// if short name, resolve in model dir
 			if !strings.Contains(val, "/") {
-				val = filepath.Join(modelDir, val)
+				val = filepath.Join(modelDir(cfg), val)
 			}
 			cfg.ASR.ModelPath = val
 			if err := config.Save(cfg, cfg.Paths.ConfigPath); err != nil {

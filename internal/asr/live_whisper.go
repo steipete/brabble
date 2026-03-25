@@ -84,6 +84,7 @@ func (r *whisperRecognizer) Run(ctx context.Context, out chan<- Segment) error {
 
 	segments := make(chan segmentChunk, 8)
 	go r.transcribeWorker(ctx, segments, out)
+	defer close(segments)
 
 	// retry loop for device/stream failures
 	for {
@@ -223,7 +224,10 @@ func (r *whisperRecognizer) transcribeWorker(ctx context.Context, segs <-chan se
 		select {
 		case <-ctx.Done():
 			return
-		case data := <-segs:
+		case data, ok := <-segs:
+			if !ok {
+				return
+			}
 			if len(data.pcm) == 0 {
 				continue
 			}

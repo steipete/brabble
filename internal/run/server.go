@@ -252,13 +252,17 @@ func (s *Server) recordTranscript(text string) {
 	if len(s.transcripts) > s.cfg.UI.StatusTail {
 		s.transcripts = s.transcripts[len(s.transcripts)-s.cfg.UI.StatusTail:]
 	}
-	// append to file
+	// append to file (under transcriptsMu, so concurrent writes are serialized)
 	f, err := os.OpenFile(s.cfg.Paths.TranscriptPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
-	if err == nil {
-		if _, err := fmt.Fprintf(f, "%s\t%s\n", entry.Timestamp.Format(time.RFC3339), entry.Text); err != nil {
-			s.logger.Warnf("write transcript: %v", err)
-		}
-		_ = f.Close()
+	if err != nil {
+		s.logger.Warnf("open transcript: %v", err)
+		return
+	}
+	if _, err := fmt.Fprintf(f, "%s\t%s\n", entry.Timestamp.Format(time.RFC3339), entry.Text); err != nil {
+		s.logger.Warnf("write transcript: %v", err)
+	}
+	if err := f.Close(); err != nil {
+		s.logger.Warnf("close transcript: %v", err)
 	}
 }
 
@@ -294,10 +298,14 @@ func (s *Server) handleConn(ctx context.Context, conn net.Conn) {
 	}()
 	sc := bufio.NewScanner(conn)
 	if !sc.Scan() {
+		if err := sc.Err(); err != nil {
+			s.logger.Warnf("control read: %v", err)
+		}
 		return
 	}
 	var req control.Request
 	if err := json.Unmarshal(sc.Bytes(), &req); err != nil {
+		s.logger.Warnf("control unmarshal: %v", err)
 		return
 	}
 	switch req.Op {
@@ -307,9 +315,13 @@ func (s *Server) handleConn(ctx context.Context, conn net.Conn) {
 			UptimeSec:   time.Since(s.startedAt).Seconds(),
 			Transcripts: s.copyTranscripts(),
 		}
-		_ = json.NewEncoder(conn).Encode(resp)
+		if err := json.NewEncoder(conn).Encode(resp); err != nil {
+			s.logger.Warnf("control write status: %v", err)
+		}
 	case "health":
-		_ = json.NewEncoder(conn).Encode(control.SimpleResponse{OK: true, Message: "ok"})
+		if err := json.NewEncoder(conn).Encode(control.SimpleResponse{OK: true, Message: "ok"}); err != nil {
+			s.logger.Warnf("control write health: %v", err)
+		}
 	default:
 		// ignore unknown
 	}
