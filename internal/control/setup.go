@@ -2,8 +2,6 @@ package control
 
 import (
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 
@@ -33,30 +31,7 @@ func NewSetupCmd(cfgPath *string) *cobra.Command {
 				fmt.Println("model already present at", modelPath)
 			} else {
 				fmt.Printf("downloading model to %s\n", modelPath)
-				resp, err := http.Get(url)
-				if err != nil {
-					return err
-				}
-				defer func() { _ = resp.Body.Close() }()
-				if resp.StatusCode != 200 {
-					return fmt.Errorf("download failed: %s", resp.Status)
-				}
-				tmp := modelPath + ".part"
-				out, err := os.Create(tmp)
-				if err != nil {
-					return err
-				}
-				defer func() { _ = out.Close() }()
-				if _, err := io.Copy(out, resp.Body); err != nil {
-					_ = os.Remove(tmp)
-					return err
-				}
-				if err := out.Close(); err != nil {
-					_ = os.Remove(tmp)
-					return err
-				}
-				if err := os.Rename(tmp, modelPath); err != nil {
-					_ = os.Remove(tmp)
+				if err := downloadFile(cmd.Context(), url, modelPath); err != nil {
 					return err
 				}
 				fmt.Println("model download complete")

@@ -2,8 +2,6 @@ package control
 
 import (
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
@@ -93,37 +91,8 @@ func newModelsDownloadCmd(cfgPath *string) *cobra.Command {
 				return fmt.Errorf("unknown model %q; run models list", name)
 			}
 			dest := filepath.Join(modelDir(cfg), name)
-			if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
-				return err
-			}
 			fmt.Printf("downloading %s -> %s\n", name, dest)
-			resp, err := http.Get(url)
-			if err != nil {
-				return err
-			}
-			defer func() { _ = resp.Body.Close() }()
-			if resp.StatusCode != 200 {
-				return fmt.Errorf("download failed: %s", resp.Status)
-			}
-			tmp := dest + ".part"
-			out, err := os.Create(tmp)
-			if err != nil {
-				return err
-			}
-			defer func() { _ = out.Close() }()
-			if _, err := io.Copy(out, resp.Body); err != nil {
-				_ = os.Remove(tmp)
-				return err
-			}
-			if err := out.Close(); err != nil {
-				_ = os.Remove(tmp)
-				return err
-			}
-			if err := os.Rename(tmp, dest); err != nil {
-				_ = os.Remove(tmp)
-				return err
-			}
-			return nil
+			return downloadFile(cmd.Context(), url, dest)
 		},
 	}
 }
