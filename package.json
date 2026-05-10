@@ -8,8 +8,8 @@
     "brabble": "pnpm run build && ./scripts/pnpm-brabble.sh",
     "stop": "./bin/brabble stop",
     "restart": "./bin/brabble restart",
-    "lint": "golangci-lint run",
-    "format": "gofmt -w .",
-    "test": "go test ./..."
+    "lint": "make lint",
+    "format": "make fmt",
+    "test": "make test"
   }
 }

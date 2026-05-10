@@ -3,7 +3,7 @@
 Always-on, local-only voice daemon for macOS. Hears your wake word (“clawd” by default), transcribes with whisper.cpp, then fires a configurable hook (user-defined, e.g., warelay heartbeat). Written in Go; ships with a daemon lifecycle, status socket, and launchd helper.
 
 ## Quick start
-- Requirements: Go 1.25+, `brew install portaudio pkg-config`, a whisper.cpp model.
+- Requirements: Go 1.25+, `brew install cmake portaudio pkg-config`, whisper.cpp headers/libs, and a whisper.cpp model.
 - One-liner: `pnpm brabble setup && pnpm start` (downloads medium Q5_1, writes config, starts daemon).
 - Foreground run: `go run ./cmd/brabble serve` (mic + PortAudio required).
 
@@ -120,13 +120,18 @@ State & logs: `~/Library/Application Support/brabble/` (pid, socket, logs, trans
 ## Development / testing
 - Go style: gofmt tabs (default). `golangci-lint` config lives at `.golangci.yml`.
 - Tests: `go test ./...` plus config/env/hook coverage.
-- Build: build whisper.cpp once, then:
+- Build: build whisper.cpp once. On macOS the Makefile auto-detects a user-local install at `~/.local/opt/whisper`; this avoids relying on Homebrew's `whisper-cpp` formula, which may not ship the `ggml.h` header required by the Go binding.
   ```sh
-  # headers + libs placed in /usr/local/{include,lib}/whisper (see docs/spec.md)
-  export CGO_CFLAGS='-I/usr/local/include/whisper'
-  export CGO_LDFLAGS='-L/usr/local/lib/whisper'
-  go build -o bin/brabble ./cmd/brabble
-  install_name_tool -add_rpath /usr/local/lib/whisper bin/brabble
+  git clone --depth 1 https://github.com/ggerganov/whisper.cpp.git /tmp/whisper.cpp-brabble
+  cmake -S /tmp/whisper.cpp-brabble -B /tmp/whisper.cpp-brabble/build -DGGML_METAL=ON -DGGML_BLAS=ON -DBUILD_SHARED_LIBS=ON
+  cmake --build /tmp/whisper.cpp-brabble/build --target whisper --parallel
+  mkdir -p ~/.local/opt/whisper/{include,lib}
+  cp /tmp/whisper.cpp-brabble/build/src/libwhisper*.dylib ~/.local/opt/whisper/lib/
+  cp /tmp/whisper.cpp-brabble/build/ggml/src/libggml*.dylib ~/.local/opt/whisper/lib/
+  cp /tmp/whisper.cpp-brabble/build/ggml/src/ggml-metal/libggml-metal*.dylib ~/.local/opt/whisper/lib/ 2>/dev/null || true
+  cp /tmp/whisper.cpp-brabble/build/ggml/src/ggml-blas/libggml-blas*.dylib ~/.local/opt/whisper/lib/ 2>/dev/null || true
+  cp -R /tmp/whisper.cpp-brabble/include/* /tmp/whisper.cpp-brabble/ggml/include/* ~/.local/opt/whisper/include/
+  make test build
   ```
 - Models: defaults to `ggml-large-v3-turbo-q8_0.bin`; best quality `ggml-large-v3-turbo.bin`; lighter option `ggml-medium-q5_1.bin`. Use `brabble models download <name>` then `brabble models set <name>`.
 - CI: GitHub Actions (`.github/workflows/ci.yml`) runs gofmt check, golangci-lint, and go test.

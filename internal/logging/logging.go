@@ -58,16 +58,16 @@ func NewTestLogger() *Logger {
 // f-style helpers ------------------------------------------------------------
 
 // Infof formats and logs at info level (legacy fmt-style helper).
-func (l *Logger) Infof(format string, args ...any) { l.Logger.Info(fmt.Sprintf(format, args...)) }
+func (l *Logger) Infof(format string, args ...any) { l.Info(fmt.Sprintf(format, args...)) }
 
 // Warnf formats and logs at warn level (legacy fmt-style helper).
-func (l *Logger) Warnf(format string, args ...any) { l.Logger.Warn(fmt.Sprintf(format, args...)) }
+func (l *Logger) Warnf(format string, args ...any) { l.Warn(fmt.Sprintf(format, args...)) }
 
 // Errorf formats and logs at error level (legacy fmt-style helper).
-func (l *Logger) Errorf(format string, args ...any) { l.Logger.Error(fmt.Sprintf(format, args...)) }
+func (l *Logger) Errorf(format string, args ...any) { l.Error(fmt.Sprintf(format, args...)) }
 
 // Debugf formats and logs at debug level (legacy fmt-style helper).
-func (l *Logger) Debugf(format string, args ...any) { l.Logger.Debug(fmt.Sprintf(format, args...)) }
+func (l *Logger) Debugf(format string, args ...any) { l.Debug(fmt.Sprintf(format, args...)) }
 
 // parseLevel maps string level to slog.Leveler.
 func parseLevel(level string) slog.Leveler {
