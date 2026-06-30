@@ -45,10 +45,8 @@ jobs:
           cmake --build /tmp/whisper.cpp-build/build --target whisper
 
           sudo mkdir -p /usr/local/lib/whisper /usr/local/include/whisper
-          sudo cp /tmp/whisper.cpp-build/build/src/libwhisper*.dylib /usr/local/lib/whisper/
-          sudo cp /tmp/whisper.cpp-build/build/ggml/src/libggml*.dylib /usr/local/lib/whisper/ || true
-          sudo cp /tmp/whisper.cpp-build/build/ggml/src/ggml-metal/libggml-metal*.dylib /usr/local/lib/whisper/ || true
-          sudo cp /tmp/whisper.cpp-build/build/ggml/src/ggml-blas/libggml-blas*.dylib /usr/local/lib/whisper/ || true
+          sudo cp /tmp/whisper.cpp-build/build/bin/libwhisper*.dylib /usr/local/lib/whisper/
+          sudo cp /tmp/whisper.cpp-build/build/bin/libggml*.dylib /usr/local/lib/whisper/ || true
           sudo cp -R /tmp/whisper.cpp-build/include/* /usr/local/include/whisper/
           sudo cp -R /tmp/whisper.cpp-build/ggml/include/* /usr/local/include/whisper/ || true
 

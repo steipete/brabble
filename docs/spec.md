@@ -171,7 +171,7 @@ Rules:
   cmake -S /tmp/whisper.cpp-build -B /tmp/whisper.cpp-build/build -DGGML_METAL=ON -DGGML_BLAS=ON
   cmake --build /tmp/whisper.cpp-build/build --target whisper
   sudo mkdir -p /usr/local/lib/whisper /usr/local/include/whisper
-  sudo cp /tmp/whisper.cpp-build/build/src/libwhisper.dylib /tmp/whisper.cpp-build/build/ggml/src/libggml*.dylib /tmp/whisper.cpp-build/build/ggml/src/ggml-metal/libggml-metal.dylib /tmp/whisper.cpp-build/build/ggml/src/ggml-blas/libggml-blas.dylib /usr/local/lib/whisper/
+  sudo cp /tmp/whisper.cpp-build/build/bin/libwhisper.dylib /tmp/whisper.cpp-build/build/bin/libggml*.dylib /usr/local/lib/whisper/
   sudo cp -R /tmp/whisper.cpp-build/include/* /tmp/whisper.cpp-build/ggml/include/* /usr/local/include/whisper/
   ```
 - Build Go binary:

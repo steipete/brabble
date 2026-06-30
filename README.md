@@ -130,10 +130,8 @@ State & logs: `~/Library/Application Support/brabble/` (pid, socket, logs, trans
   cmake -S /tmp/whisper.cpp-brabble -B /tmp/whisper.cpp-brabble/build -DGGML_METAL=ON -DGGML_BLAS=ON -DBUILD_SHARED_LIBS=ON
   cmake --build /tmp/whisper.cpp-brabble/build --target whisper --parallel
   mkdir -p ~/.local/opt/whisper/{include,lib}
-  cp /tmp/whisper.cpp-brabble/build/src/libwhisper*.dylib ~/.local/opt/whisper/lib/
-  cp /tmp/whisper.cpp-brabble/build/ggml/src/libggml*.dylib ~/.local/opt/whisper/lib/
-  cp /tmp/whisper.cpp-brabble/build/ggml/src/ggml-metal/libggml-metal*.dylib ~/.local/opt/whisper/lib/ 2>/dev/null || true
-  cp /tmp/whisper.cpp-brabble/build/ggml/src/ggml-blas/libggml-blas*.dylib ~/.local/opt/whisper/lib/ 2>/dev/null || true
+  cp /tmp/whisper.cpp-brabble/build/bin/libwhisper*.dylib ~/.local/opt/whisper/lib/
+  cp /tmp/whisper.cpp-brabble/build/bin/libggml*.dylib ~/.local/opt/whisper/lib/
   cp -R /tmp/whisper.cpp-brabble/include/* /tmp/whisper.cpp-brabble/ggml/include/* ~/.local/opt/whisper/include/
   make test build
   ```
