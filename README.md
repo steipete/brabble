@@ -139,7 +139,7 @@ State & logs: `~/Library/Application Support/brabble/` (pid, socket, logs, trans
 - CI: GitHub Actions (`.github/workflows/ci.yml`) runs gofmt check, golangci-lint, and go test.
 
 ## Release archives
-- macOS release archives include the binding-matched whisper.cpp runtime libraries under `lib/`; keep that directory beside the `brabble` binary.
+- Apple Silicon (`arm64`) release archives include the binding-matched whisper.cpp runtime libraries under `lib/`; keep that directory beside the `brabble` binary. Intel Macs currently build from source using the requirements above.
 - Install the remaining system runtime dependency with `brew install portaudio`.
 
 🎙️ Brabble. Make it say.

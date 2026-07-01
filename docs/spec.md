@@ -151,7 +151,7 @@ Rules:
 - Doctor command checks config/model/hook binary presence and PortAudio availability.
 - launchd helper writes a user plist for autostart on macOS.
 - launchd supports custom env via `brabble service install --env KEY=VAL`; helper prints kickstart/bootout commands.
-- CI: GitHub Actions runs formatting, lint, and tests on Linux with PortAudio + whisper.cpp installed; the release workflow builds macOS artifacts.
+- CI: GitHub Actions runs formatting, lint, and tests on Linux with PortAudio + whisper.cpp installed; the release workflow builds Apple Silicon (`arm64`) artifacts. Intel remains a supported source build.
 - Setup command fetches default whisper model if missing.
 - Models command supports listing known models, downloading into state dir, and setting `asr.model_path`.
 - Optional `/metrics` endpoint (Prometheus text) gated by config.
