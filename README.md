@@ -138,6 +138,10 @@ State & logs: `~/Library/Application Support/brabble/` (pid, socket, logs, trans
 - Models: defaults to `ggml-large-v3-turbo-q8_0.bin`; best quality `ggml-large-v3-turbo.bin`; lighter option `ggml-medium-q5_1.bin`. Use `brabble models download <name>` then `brabble models set <name>`.
 - CI: GitHub Actions (`.github/workflows/ci.yml`) runs gofmt check, golangci-lint, and go test.
 
+## Release archives
+- macOS release archives include the binding-matched whisper.cpp runtime libraries under `lib/`; keep that directory beside the `brabble` binary.
+- Install the remaining system runtime dependency with `brew install portaudio`.
+
 🎙️ Brabble. Make it say.
 [hooks]
 # Optional per-wake hooks. First matching entry wins.

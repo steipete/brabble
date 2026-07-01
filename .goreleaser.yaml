@@ -16,7 +16,7 @@ builds:
       - arm64
     hooks:
       post:
-        - install_name_tool -add_rpath /usr/local/opt/whisper/lib "{{ .Path }}" || true
+        - install_name_tool -add_rpath "@executable_path/lib" "{{ .Path }}" || true
 
 archives:
   - ids:
@@ -24,6 +24,12 @@ archives:
     formats:
       - tar.gz
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - src: LICENSE
+      - src: README.md
+      - src: CHANGELOG.md
+      - src: .release-libs/*.dylib
+        dst: lib
 
 checksum:
   name_template: checksums.txt

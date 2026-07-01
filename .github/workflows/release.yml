@@ -65,6 +65,12 @@ jobs:
           cmake --build /tmp/whisper.cpp-build/build --parallel
           sudo cmake --install /tmp/whisper.cpp-build/build --prefix /usr/local/opt/whisper
 
+      - name: Stage whisper.cpp runtime libraries
+        run: |
+          mkdir -p .release-libs
+          cp -a /usr/local/opt/whisper/lib/libwhisper*.dylib .release-libs/
+          cp -a /usr/local/opt/whisper/lib/libggml*.dylib .release-libs/
+
       - name: Prepare release notes
         env:
           RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
