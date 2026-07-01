@@ -22,14 +22,21 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential cmake libopenblas-dev portaudio19-dev pkg-config
-          git clone --depth 1 https://github.com/ggerganov/whisper.cpp.git /tmp/whisper.cpp
-          cmake -S /tmp/whisper.cpp -B /tmp/whisper.cpp/build -DGGML_OPENBLAS=ON -DBUILD_SHARED_LIBS=ON
-          cmake --build /tmp/whisper.cpp/build --target whisper --config Release
-          sudo mkdir -p /usr/local/lib/whisper /usr/local/include/whisper
-          sudo cp /tmp/whisper.cpp/build/bin/libwhisper.so* /usr/local/lib/whisper/
-          sudo cp /tmp/whisper.cpp/build/bin/libggml*.so* /usr/local/lib/whisper/
-          sudo cp -R /tmp/whisper.cpp/include/* /tmp/whisper.cpp/ggml/include/* /usr/local/include/whisper/
-          echo "/usr/local/lib/whisper" | sudo tee /etc/ld.so.conf.d/whisper.conf
+          whisper_cpp_ref="$(tr -d '\n' < WHISPER_CPP_REF)"
+          binding_version="$(go list -m -f '{{.Version}}' github.com/ggerganov/whisper.cpp/bindings/go)"
+          test "${binding_version##*-}" = "${whisper_cpp_ref:0:12}"
+          git init /tmp/whisper.cpp
+          git -C /tmp/whisper.cpp remote add origin https://github.com/ggml-org/whisper.cpp.git
+          git -C /tmp/whisper.cpp fetch --depth 1 origin "$whisper_cpp_ref"
+          git -C /tmp/whisper.cpp checkout --detach FETCH_HEAD
+          cmake -S /tmp/whisper.cpp -B /tmp/whisper.cpp/build \
+            -DGGML_OPENBLAS=ON \
+            -DBUILD_SHARED_LIBS=ON \
+            -DWHISPER_BUILD_EXAMPLES=OFF \
+            -DWHISPER_BUILD_TESTS=OFF
+          cmake --build /tmp/whisper.cpp/build --config Release --parallel
+          sudo cmake --install /tmp/whisper.cpp/build --prefix /usr/local/opt/whisper
+          echo "/usr/local/opt/whisper/lib" | sudo tee /etc/ld.so.conf.d/whisper.conf
           sudo ldconfig
 
       - name: Gofmt (check)
@@ -38,18 +45,18 @@ jobs:
           git diff --exit-code
 
       - name: GolangCI-Lint
-        uses: golangci/golangci-lint-action@v9.2.0
+        uses: golangci/golangci-lint-action@v9.3.0
         with:
           version: v2.12.1
           args: --timeout=5m
         env:
-          CGO_CFLAGS: -I/usr/local/include/whisper
-          CGO_LDFLAGS: -L/usr/local/lib/whisper
-          LD_LIBRARY_PATH: /usr/local/lib/whisper
+          CGO_CFLAGS: -I/usr/local/opt/whisper/include
+          CGO_LDFLAGS: -L/usr/local/opt/whisper/lib
+          LD_LIBRARY_PATH: /usr/local/opt/whisper/lib
 
       - name: Go test
         run: go test ./...
         env:
-          CGO_CFLAGS: -I/usr/local/include/whisper
-          CGO_LDFLAGS: -L/usr/local/lib/whisper
-          LD_LIBRARY_PATH: /usr/local/lib/whisper
+          CGO_CFLAGS: -I/usr/local/opt/whisper/include
+          CGO_LDFLAGS: -L/usr/local/opt/whisper/lib
+          LD_LIBRARY_PATH: /usr/local/opt/whisper/lib

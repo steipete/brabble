@@ -8,15 +8,15 @@ builds:
     binary: brabble
     env:
       - CGO_ENABLED=1
-      - CGO_CFLAGS=-I/usr/local/include/whisper
-      - CGO_LDFLAGS=-L/usr/local/lib/whisper
+      - CGO_CFLAGS=-I/usr/local/opt/whisper/include
+      - CGO_LDFLAGS=-L/usr/local/opt/whisper/lib
     goos:
       - darwin
     goarch:
       - arm64
     hooks:
       post:
-        - install_name_tool -add_rpath /usr/local/lib/whisper "{{ .Path }}" || true
+        - install_name_tool -add_rpath /usr/local/opt/whisper/lib "{{ .Path }}" || true
 
 archives:
   - ids:

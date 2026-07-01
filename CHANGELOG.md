@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+- Restore reproducible macOS releases by building and installing the whisper.cpp revision that matches the Go binding.
+
+### Changed
+- Update stable Go and GitHub Actions maintenance dependencies.
+
 ## [0.1.1] - 2026-06-11
 ### Fixed
 - Clean up interrupted model downloads, honor configured model state paths, report control and transcript I/O errors, and wait for ASR and control workers during shutdown. (#1, thanks @Wang200935)

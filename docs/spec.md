@@ -167,19 +167,23 @@ Rules:
 ## Build
 - Build whisper.cpp once (Metal+BLAS):
   ```sh
-  git clone https://github.com/ggerganov/whisper.cpp.git /tmp/whisper.cpp-build
-  cmake -S /tmp/whisper.cpp-build -B /tmp/whisper.cpp-build/build -DGGML_METAL=ON -DGGML_BLAS=ON
-  cmake --build /tmp/whisper.cpp-build/build --target whisper
-  sudo mkdir -p /usr/local/lib/whisper /usr/local/include/whisper
-  sudo cp /tmp/whisper.cpp-build/build/bin/libwhisper.dylib /tmp/whisper.cpp-build/build/bin/libggml*.dylib /usr/local/lib/whisper/
-  sudo cp -R /tmp/whisper.cpp-build/include/* /tmp/whisper.cpp-build/ggml/include/* /usr/local/include/whisper/
+  WHISPER_CPP_REF="$(tr -d '\n' < WHISPER_CPP_REF)"
+  git init /tmp/whisper.cpp-build
+  git -C /tmp/whisper.cpp-build remote add origin https://github.com/ggml-org/whisper.cpp.git
+  git -C /tmp/whisper.cpp-build fetch --depth 1 origin "$WHISPER_CPP_REF"
+  git -C /tmp/whisper.cpp-build checkout --detach FETCH_HEAD
+  cmake -S /tmp/whisper.cpp-build -B /tmp/whisper.cpp-build/build \
+    -DGGML_METAL=ON -DGGML_BLAS=ON -DBUILD_SHARED_LIBS=ON \
+    -DWHISPER_BUILD_EXAMPLES=OFF -DWHISPER_BUILD_TESTS=OFF
+  cmake --build /tmp/whisper.cpp-build/build --parallel
+  sudo cmake --install /tmp/whisper.cpp-build/build --prefix /usr/local/opt/whisper
   ```
 - Build Go binary:
   ```sh
-  export CGO_CFLAGS='-I/usr/local/include/whisper'
-  export CGO_LDFLAGS='-L/usr/local/lib/whisper'
+  export CGO_CFLAGS='-I/usr/local/opt/whisper/include'
+  export CGO_LDFLAGS='-L/usr/local/opt/whisper/lib'
   go build -o bin/brabble ./cmd/brabble
-  install_name_tool -add_rpath /usr/local/lib/whisper bin/brabble
+  install_name_tool -add_rpath /usr/local/opt/whisper/lib bin/brabble
   ```
 
 ## Models

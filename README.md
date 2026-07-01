@@ -122,17 +122,17 @@ State & logs: `~/Library/Application Support/brabble/` (pid, socket, logs, trans
 - Tests: `go test ./...` plus config/env/hook coverage.
 - Build: build whisper.cpp once. On macOS the Makefile auto-detects a user-local install at `~/.local/opt/whisper`; this avoids relying on Homebrew's `whisper-cpp` formula, which may not ship the `ggml.h` header required by the Go binding.
   ```sh
-  WHISPER_CPP_REF=df7638d8229a243af8a4b5a8ae557e0d74e0a0ae
-  git init /tmp/whisper.cpp-brabble
-  git -C /tmp/whisper.cpp-brabble remote add origin https://github.com/ggml-org/whisper.cpp.git
-  git -C /tmp/whisper.cpp-brabble fetch --depth 1 origin "$WHISPER_CPP_REF"
-  git -C /tmp/whisper.cpp-brabble checkout --detach FETCH_HEAD
-  cmake -S /tmp/whisper.cpp-brabble -B /tmp/whisper.cpp-brabble/build -DGGML_METAL=ON -DGGML_BLAS=ON -DBUILD_SHARED_LIBS=ON
-  cmake --build /tmp/whisper.cpp-brabble/build --target whisper --parallel
-  mkdir -p ~/.local/opt/whisper/{include,lib}
-  cp /tmp/whisper.cpp-brabble/build/bin/libwhisper*.dylib ~/.local/opt/whisper/lib/
-  cp /tmp/whisper.cpp-brabble/build/bin/libggml*.dylib ~/.local/opt/whisper/lib/
-  cp -R /tmp/whisper.cpp-brabble/include/* /tmp/whisper.cpp-brabble/ggml/include/* ~/.local/opt/whisper/include/
+  WHISPER_CPP_REF="$(tr -d '\n' < WHISPER_CPP_REF)"
+  WHISPER_CPP_SRC="$(mktemp -d)"
+  git -C "$WHISPER_CPP_SRC" init
+  git -C "$WHISPER_CPP_SRC" remote add origin https://github.com/ggml-org/whisper.cpp.git
+  git -C "$WHISPER_CPP_SRC" fetch --depth 1 origin "$WHISPER_CPP_REF"
+  git -C "$WHISPER_CPP_SRC" checkout --detach FETCH_HEAD
+  cmake -S "$WHISPER_CPP_SRC" -B "$WHISPER_CPP_SRC/build" \
+    -DGGML_METAL=ON -DGGML_BLAS=ON -DBUILD_SHARED_LIBS=ON \
+    -DWHISPER_BUILD_EXAMPLES=OFF -DWHISPER_BUILD_TESTS=OFF
+  cmake --build "$WHISPER_CPP_SRC/build" --parallel
+  cmake --install "$WHISPER_CPP_SRC/build" --prefix "$HOME/.local/opt/whisper"
   make test build
   ```
 - Models: defaults to `ggml-large-v3-turbo-q8_0.bin`; best quality `ggml-large-v3-turbo.bin`; lighter option `ggml-medium-q5_1.bin`. Use `brabble models download <name>` then `brabble models set <name>`.
