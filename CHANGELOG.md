@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Restore documented single-hook configs and `test-hook` routing through the per-wake dispatcher; validate every configured hook in `doctor`.
 - Protect local voice data with private transcript, control-socket, and launchd-plist permissions; omit hook environment values from logs.
 - Bound metrics request headers to prevent slow-client resource exhaustion.
-- Restore reproducible macOS releases by building and installing the whisper.cpp revision that matches the Go binding.
+- Restore reproducible macOS releases by building the binding-matched whisper.cpp revision and bundling its runtime libraries.
 
 ### Changed
 - Update the security-patched Go 1.25 toolchain, Go modules, and GitHub Actions maintenance dependencies.

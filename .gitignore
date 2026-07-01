@@ -1,6 +1,7 @@
 # Build outputs
 bin/
 dist/
+.release-libs/
 *.exe
 *.exe~
 *.dll
