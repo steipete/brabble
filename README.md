@@ -3,7 +3,7 @@
 Always-on, local-only voice daemon for macOS. Hears your wake word (“clawd” by default), transcribes with whisper.cpp, then fires a configurable hook (user-defined, e.g., warelay heartbeat). Written in Go; ships with a daemon lifecycle, status socket, and launchd helper.
 
 ## Quick start
-- Requirements: Go 1.25.11+, `brew install cmake portaudio pkg-config`, whisper.cpp headers/libs, and a whisper.cpp model.
+- Requirements: Go 1.26.5+, `brew install cmake portaudio pkg-config`, whisper.cpp headers/libs, and a whisper.cpp model.
 - One-liner: `pnpm brabble setup && pnpm start` (downloads large-v3-turbo Q8_0, writes config, starts daemon).
 - Foreground run: `go run ./cmd/brabble serve` (mic + PortAudio required).
 
