@@ -193,7 +193,7 @@ Rules:
 Use `brabble models download <name>` then `brabble models set <name>` to switch.
 
 ## Dependencies
-- Go 1.25.11+
+- Go 1.26.5+
 - Runtime libs (planned): PortAudio (macOS: `brew install portaudio`), whisper.cpp built as dylib or static via cgo, optional onnxruntime (Silero VAD), optional Porcupine wake word SDK.
 - Current tree vendors only Go libs: cobra, slog stdlib, lumberjack, go-toml, shlex.
 
