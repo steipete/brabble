@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Restore reproducible macOS releases by building the binding-matched whisper.cpp revision and bundling its runtime libraries.
 
 ### Changed
-- Update the security-patched Go 1.26 toolchain, Go modules, whisper.cpp, GoReleaser, and GitHub Actions maintenance dependencies.
+- Update to Go 1.27 and refresh whisper.cpp with upstream inference fixes; keep its Go binding and native runtime pinned together and update GoReleaser and CI tooling.
 
 ## [0.1.1] - 2026-06-11
 ### Fixed
