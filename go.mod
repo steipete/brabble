@@ -2,6 +2,8 @@ module brabble
 
 go 1.27.0
 
+toolchain go1.27.1
+
 require (
 	github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20260831035357-eacbd8234c66
 	github.com/go-audio/audio v1.0.0

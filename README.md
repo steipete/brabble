@@ -3,7 +3,7 @@
 Always-on, local-only voice daemon for macOS. Hears your wake word (“clawd” by default), transcribes with whisper.cpp, then fires a configurable hook (user-defined, e.g., warelay heartbeat). Written in Go; ships with a daemon lifecycle, status socket, and launchd helper.
 
 ## Quick start
-- Requirements: Go 1.27.0+, `brew install cmake portaudio pkg-config`, whisper.cpp headers/libs, and a whisper.cpp model.
+- Requirements: Go 1.27.0+ (Go 1.27.1 is the preferred build toolchain), `brew install cmake portaudio pkg-config`, whisper.cpp headers/libs, and a whisper.cpp model.
 - One-liner: `pnpm brabble setup && pnpm start` (downloads large-v3-turbo Q8_0, writes config, starts daemon).
 - Foreground run: `go run ./cmd/brabble serve` (mic + PortAudio required).
 
@@ -120,7 +120,7 @@ State & logs: `~/Library/Application Support/brabble/` (pid, socket, logs, trans
 ## Development / testing
 - Go style: gofmt tabs (default). `golangci-lint` config lives at `.golangci.yml`.
 - Tests: `go test ./...` plus config/env/hook coverage.
-- Build: build whisper.cpp once. On macOS the Makefile auto-detects a user-local install at `~/.local/opt/whisper`; this avoids relying on Homebrew's `whisper-cpp` formula, which may not ship the `ggml.h` header required by the Go binding.
+- Build: build whisper.cpp once. On macOS the Makefile auto-detects a user-local install at `~/.local/opt/whisper`; this avoids relying on Homebrew's `whisper-cpp` formula, which may not ship the `ggml.h` header required by the Go binding. It embeds the runtime library path in builds and test binaries so signed Go toolchains can load whisper.cpp without `DYLD_LIBRARY_PATH`.
   ```sh
   WHISPER_CPP_REF="$(tr -d '\n' < WHISPER_CPP_REF)"
   WHISPER_CPP_SRC="$(mktemp -d)"

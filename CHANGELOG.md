@@ -6,12 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Fixed
+- Fix macOS tests failing to load whisper.cpp with signed Go toolchains by linking the native runtime search path into test binaries.
 - Restore documented single-hook configs and `test-hook` routing through the per-wake dispatcher; validate every configured hook in `doctor`.
 - Protect local voice data with private transcript, control-socket, and launchd-plist permissions; omit hook environment values from logs.
 - Bound metrics request headers to prevent slow-client resource exhaustion.
 - Restore reproducible macOS releases by building the binding-matched whisper.cpp revision and bundling its runtime libraries.
 
 ### Changed
+- Build with Go 1.27.1 by default while retaining Go 1.27.0 source compatibility.
 - Update to Go 1.27 and refresh whisper.cpp with upstream inference fixes; keep its Go binding and native runtime pinned together and update GoReleaser and CI tooling.
 
 ## [0.1.1] - 2026-06-11
