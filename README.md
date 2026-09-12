@@ -1,6 +1,18 @@
 # 🎙️ Brabble — Open hailing frequencies… and run the command.
 
-Always-on, local-only voice daemon for macOS. Hears your wake word (“clawd” by default), transcribes with whisper.cpp, then fires a configurable hook (user-defined, e.g., warelay heartbeat). Written in Go; ships with a daemon lifecycle, status socket, and launchd helper.
+Always-on, local-only voice daemon for macOS and Linux. Hears your wake word (“clawd” by default), transcribes with whisper.cpp, then fires a configurable hook (user-defined, e.g., warelay heartbeat). Written in Go; ships with a daemon lifecycle, status socket, and launchd helper.
+
+## Linux / Omarchy
+
+Install Go, CMake, a C++ compiler, pkg-config and PortAudio. Build the commit in
+`WHISPER_CPP_REF` with `-DBUILD_SHARED_LIBS=ON -DGGML_METAL=OFF`, install it under
+`~/.local/opt/whisper`, then run `make test build`. The Makefile discovers this
+prefix and embeds the library search path on Linux as well as macOS.
+
+`brabble service install` writes `~/.config/systemd/user/brabble.service` (or under
+`XDG_CONFIG_HOME`) and prints the commands to reload and enable it. Installation
+does not start microphone capture. Use `journalctl --user -u brabble.service` for
+service output. Select/download a model before starting the service.
 
 ## Quick start
 - Requirements: Go 1.27.0+ (Go 1.27.1 is the preferred build toolchain), `brew install cmake portaudio pkg-config`, whisper.cpp headers/libs, and a whisper.cpp model.

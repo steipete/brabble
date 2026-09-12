@@ -3,6 +3,7 @@ package control
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	"brabble/internal/config"
@@ -15,7 +16,7 @@ import (
 func NewServiceRootCmd(cfgPath *string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "service",
-		Short: "Manage launchd service (macOS)",
+		Short: "Manage user service (launchd on macOS, systemd on Linux)",
 	}
 	cmd.AddCommand(newServiceInstallCmd(cfgPath))
 	cmd.AddCommand(newServiceUninstallCmd())
@@ -26,7 +27,7 @@ func NewServiceRootCmd(cfgPath *string) *cobra.Command {
 func newServiceInstallCmd(cfgPath *string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "install",
-		Short: "Install user launchd service (macOS)",
+		Short: "Install user service definition",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := config.Load(*cfgPath)
 			if err != nil {
@@ -52,6 +53,17 @@ func newServiceInstallCmd(cfgPath *string) *cobra.Command {
 				Log:    cfg.Paths.LogPath,
 				Env:    env,
 			}
+			if runtime.GOOS == "linux" {
+				path, err := service.WriteSystemdUnit(params)
+				if err != nil {
+					return err
+				}
+				fmt.Printf("systemd unit written: %s\n", path)
+				fmt.Println("Load: systemctl --user daemon-reload")
+				fmt.Println("Start: systemctl --user enable --now brabble.service")
+				fmt.Println("Stop: systemctl --user disable --now brabble.service")
+				return nil
+			}
 			path, err := service.WritePlist(params)
 			if err != nil {
 				return err
@@ -70,8 +82,19 @@ func newServiceInstallCmd(cfgPath *string) *cobra.Command {
 func newServiceUninstallCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "uninstall",
-		Short: "Remove user launchd plist (macOS)",
+		Short: "Remove user service definition",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if runtime.GOOS == "linux" {
+				path, err := service.SystemdPath()
+				if err != nil {
+					return err
+				}
+				if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+					return err
+				}
+				fmt.Printf("removed %s; stop any running service with systemctl --user disable --now brabble.service, then systemctl --user daemon-reload\n", path)
+				return nil
+			}
 			plist := service.LaunchdPath("com.brabble.agent")
 			_ = os.Remove(plist)
 			fmt.Printf("removed %s (if present); unload manually with: launchctl bootout gui/$(id -u) %s\n", plist, plist)
@@ -83,8 +106,20 @@ func newServiceUninstallCmd() *cobra.Command {
 func newServiceStatusCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "status",
-		Short: "Show launchd plist path and whether it exists",
+		Short: "Show service definition path and whether it exists",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if runtime.GOOS == "linux" {
+				path, err := service.SystemdPath()
+				if err != nil {
+					return err
+				}
+				_, err = os.Stat(path)
+				if err != nil && !os.IsNotExist(err) {
+					return err
+				}
+				fmt.Printf("unit: %s\ninstalled: %t\nRuntime status: systemctl --user status brabble.service\n", path, err == nil)
+				return nil
+			}
 			path, ok := service.Status("com.brabble.agent")
 			fmt.Printf("plist: %s\n", path)
 			if ok {

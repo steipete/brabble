@@ -9,6 +9,8 @@ CGO_LDFLAGS ?= -L$(WHISPER_LIB)
 ifeq ($(shell uname -s),Darwin)
 # Signed Go toolchains strip DYLD_LIBRARY_PATH before running test binaries.
 override CGO_LDFLAGS += -Wl,-rpath,$(WHISPER_LIB)
+else ifeq ($(shell uname -s),Linux)
+override CGO_LDFLAGS += -Wl,--disable-new-dtags,-rpath,$(WHISPER_LIB)
 endif
 
 .PHONY: lint fmt test build
