@@ -109,7 +109,7 @@ func applyColorHelp(root *cobra.Command) {
 		writeln("  doctor                      check deps/model/hook/portaudio")
 		writeln("  setup                       download default whisper model")
 		writeln("  models list|download|set    manage whisper.cpp models")
-		writeln("  service install|uninstall|status manage launchd plist (macOS)")
+		writeln("  service install|uninstall|status manage launchd (macOS) or systemd (Linux)")
 		writeln("  health                      control-socket liveness ping")
 		writeln("  tail-log                    show last log lines")
 		writeln("  test-hook \"text\"           invoke hook manually")
