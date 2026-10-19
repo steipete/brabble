@@ -47,7 +47,7 @@ jobs:
       - name: GolangCI-Lint
         uses: golangci/golangci-lint-action@v9.3.0
         with:
-          version: v2.13.2
+          version: v2.15.0
           args: --timeout=5m
         env:
           CGO_CFLAGS: -I/usr/local/opt/whisper/include
