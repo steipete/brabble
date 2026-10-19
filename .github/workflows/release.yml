@@ -2,10 +2,16 @@ name: release
 
 on:
   push:
+    branches: [main]
     tags:
       - "v*"
+  pull_request:
   workflow_dispatch:
     inputs:
+      dry_run:
+        description: "Build and verify archives without signing or publishing"
+        type: boolean
+        default: true
       tag:
         description: "Tag to (re)release (e.g. v0.1.0)"
         required: true
@@ -16,9 +22,10 @@ permissions:
 
 jobs:
   goreleaser:
-    runs-on: macos-14
+    runs-on: xcode-27
     env:
       MACOSX_DEPLOYMENT_TARGET: "14.0"
+      PUBLISH_RELEASE: ${{ (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) || (github.event_name == 'workflow_dispatch' && !inputs.dry_run) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -29,10 +36,13 @@ jobs:
         run: cp .goreleaser.yaml /tmp/.goreleaser.yaml
 
       - name: Checkout release tag
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        run: git checkout ${{ inputs.tag }}
+        if: ${{ github.event_name == 'workflow_dispatch' && !inputs.dry_run }}
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: git checkout "$RELEASE_TAG"
 
       - name: Prepare signing and notarization
+        if: env.PUBLISH_RELEASE == 'true'
         env:
           MACOS_SIGNING_P12: ${{ secrets.MACOS_SIGNING_P12 }}
           MACOS_SIGNING_P12_PASSWORD: ${{ secrets.MACOS_SIGNING_P12_PASSWORD }}
@@ -52,7 +62,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version: "1.27.2"
           cache: true
 
       - name: Install build deps
@@ -91,7 +101,11 @@ jobs:
           cp -a /usr/local/opt/whisper/lib/libwhisper*.dylib .release-libs/
           cp -a /usr/local/opt/whisper/lib/libggml*.dylib .release-libs/
 
+      - name: Test
+        run: make WHISPER_PREFIX=/usr/local/opt/whisper test
+
       - name: Sign and notarize runtime libraries
+        if: env.PUBLISH_RELEASE == 'true'
         env:
           MACOS_SIGNING_P12: ${{ secrets.MACOS_SIGNING_P12 }}
           MACOS_SIGNING_P12_PASSWORD: ${{ secrets.MACOS_SIGNING_P12_PASSWORD }}
@@ -135,6 +149,7 @@ jobs:
           PY
 
       - name: Prepare release notes
+        if: env.PUBLISH_RELEASE == 'true'
         env:
           RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
         run: |
@@ -149,6 +164,7 @@ jobs:
           cat /tmp/release-notes.md
 
       - name: GoReleaser
+        if: env.PUBLISH_RELEASE == 'true'
         uses: goreleaser/goreleaser-action@v7
         with:
           distribution: goreleaser
@@ -160,6 +176,14 @@ jobs:
           MACOS_SIGNING_P12_PASSWORD: ${{ secrets.MACOS_SIGNING_P12_PASSWORD }}
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+
+      - name: Build dry-run archives
+        if: env.PUBLISH_RELEASE != 'true'
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          distribution: goreleaser
+          version: v2.18.0
+          args: release --clean --snapshot --skip=sign,notarize --config /tmp/.goreleaser.yaml
 
       - name: Remove notarization key
         if: always()

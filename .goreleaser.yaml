@@ -14,6 +14,14 @@ builds:
       - darwin
     goarch:
       - arm64
+    hooks:
+      post:
+        - cmd: >-
+            bash -o pipefail -c 'for binary in "{{ .Path }}" .release-libs/*.dylib; do
+            echo "Checking macOS minimum: $binary";
+            xcrun vtool -show-build "$binary" |
+            awk '\''$1 == "cmd" { legacy=($2 == "LC_VERSION_MIN_MACOSX") } $1 == "minos" || (legacy && $1 == "version") { found=1; split($2, v, "."); print $0; if (v[1] > 14 || (v[1] == 14 && (v[2] > 0 || v[3] > 0))) bad=1 } END { exit (!found || bad) }'\'' || exit 1;
+            done'
 
 archives:
   - ids:

@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+- Build macOS release archives on Xcode 27 runners while preserving the macOS 14 minimum; verify release builds on pull requests and support non-publishing dry runs.
+- Use the patched Go 1.27.2 build toolchain while retaining the Go 1.27.0 source minimum.
+
 ## [0.1.3] - 2026-09-13
 
 **Highlights:** Release binaries launch cleanly from a quarantined download, and source builds keep a valid signature layout.

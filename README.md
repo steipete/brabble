@@ -15,7 +15,7 @@ does not start microphone capture. Use `journalctl --user -u brabble.service` fo
 service output. Select/download a model before starting the service.
 
 ## Quick start
-- Requirements: Go 1.27.0+ (Go 1.27.1 is the preferred build toolchain), `brew install cmake portaudio pkg-config`, whisper.cpp headers/libs, and a whisper.cpp model.
+- Requirements: Go 1.27.0+ (Go 1.27.2 is the preferred build toolchain), `brew install cmake portaudio pkg-config`, whisper.cpp headers/libs, and a whisper.cpp model.
 - One-liner: `pnpm brabble setup && pnpm start` (downloads large-v3-turbo Q8_0, writes config, starts daemon).
 - Foreground run: `go run ./cmd/brabble serve` (mic + PortAudio required).
 
@@ -152,6 +152,7 @@ State & logs: `~/Library/Application Support/brabble/` (pid, socket, logs, trans
 
 ## Release archives
 - macOS archives for release 0.1.2 and later require macOS 14 or newer and ship a Developer ID signed, notarized executable.
+- Release CI uses the `xcode-27` Apple Silicon runner with an explicit macOS 14 deployment target. Pull requests and main-branch pushes build unsigned snapshot archives and verify their deployment targets. To verify merged main manually, dispatch `release.yml` with `dry_run: true` and the current release tag; dry runs build the selected branch without publishing or checking out the tag.
 - Apple Silicon (`arm64`) release archives include the binding-matched whisper.cpp runtime libraries under `lib/`; keep that directory beside the `brabble` binary. Intel Macs currently build from source using the requirements above.
 - Install the remaining system runtime dependency with `brew install portaudio`.
 
