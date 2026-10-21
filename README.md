@@ -15,7 +15,7 @@ does not start microphone capture. Use `journalctl --user -u brabble.service` fo
 service output. Select/download a model before starting the service.
 
 ## Quick start
-- Requirements: Go 1.27.0+ (Go 1.27.2 is the preferred build toolchain), `brew install cmake portaudio pkg-config`, whisper.cpp headers/libs, and a whisper.cpp model.
+- Requirements: Go 1.27.0+ (Go 1.27.3 is the preferred build toolchain), `brew install cmake portaudio pkg-config`, whisper.cpp headers/libs, and a whisper.cpp model.
 - One-liner: `pnpm brabble setup && pnpm start` (downloads large-v3-turbo Q8_0, writes config, starts daemon).
 - Foreground run: `go run ./cmd/brabble serve` (mic + PortAudio required).
 

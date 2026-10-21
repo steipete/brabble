@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-10-20
+
+**Highlights:** Fix certificate validation vulnerability GO-2026-6809 in release binaries.
+
+### Fixed
+- Build with Go 1.27.3 to fix certificate validation vulnerability GO-2026-6809.
+
 ### Changed
 - Build macOS release archives on Xcode 27 runners while preserving the macOS 14 minimum; verify release builds on pull requests and support non-publishing dry runs.
 - Use the patched Go 1.27.2 build toolchain while retaining the Go 1.27.0 source minimum.
@@ -54,7 +61,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Doctor checks deps/model/portaudio; service command writes launchd plist with env; health check.
 - Rich, colored Go help output with examples; pnpm scripts for build/run.
 
-[Unreleased]: https://github.com/steipete/brabble/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/steipete/brabble/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/steipete/brabble/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/steipete/brabble/releases/tag/v0.1.3
 [0.1.2]: https://github.com/steipete/brabble/releases/tag/v0.1.2
 [0.1.1]: https://github.com/steipete/brabble/releases/tag/v0.1.1
