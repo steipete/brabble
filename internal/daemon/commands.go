@@ -11,6 +11,7 @@ import (
 	"brabble/internal/config"
 	"brabble/internal/logging"
 	"brabble/internal/run"
+	"brabble/internal/service"
 
 	"github.com/spf13/cobra"
 )
@@ -36,13 +37,7 @@ func NewStartCmd(cfgPath *string) *cobra.Command {
 				return err
 			}
 			child := exec.Command(self, "serve", "--config", cfg.Paths.ConfigPath)
-			// propagate runtime flags via env overrides
-			if cmd.Flag("no-wake").Changed {
-				child.Env = append(child.Env, "BRABBLE_WAKE_ENABLED=0")
-			}
-			if addr := cmd.Flag("metrics-addr").Value.String(); addr != "" {
-				child.Env = append(child.Env, fmt.Sprintf("BRABBLE_METRICS_ADDR=%s", addr))
-			}
+			child.Env = service.StartChildEnv(cmd.Flag("no-wake").Changed, cmd.Flag("metrics-addr").Value.String())
 			child.Stdout = os.Stdout
 			child.Stderr = os.Stderr
 			if err := child.Start(); err != nil {

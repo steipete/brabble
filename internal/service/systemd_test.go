@@ -26,7 +26,7 @@ func TestWriteSystemdUnit(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{`ExecStart="/tmp/voice app" start --foreground --config "/tmp/a%%b.toml"`, `Environment="TOKEN=a%%b"`, `WantedBy=default.target`} {
+	for _, want := range []string{`ExecStart="/tmp/voice app" serve --config "/tmp/a%%b.toml"`, `Environment="TOKEN=a%%b"`, `WantedBy=default.target`} {
 		if !strings.Contains(string(data), want) {
 			t.Fatalf("missing %s in %s", want, data)
 		}

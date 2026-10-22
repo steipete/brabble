@@ -31,7 +31,7 @@ func WriteSystemdUnit(params LaunchdParams) (string, error) {
 	}
 	var content strings.Builder
 	content.WriteString("[Unit]\nDescription=Brabble local voice assistant\n\n[Service]\nType=simple\n")
-	fmt.Fprintf(&content, "ExecStart=%s start --foreground --config %s\n", systemdQuote(strings.ReplaceAll(params.Binary, "$", "$$")), systemdQuote(strings.ReplaceAll(params.Config, "$", "$$")))
+	fmt.Fprintf(&content, "ExecStart=%s serve --config %s\n", systemdQuote(strings.ReplaceAll(params.Binary, "$", "$$")), systemdQuote(strings.ReplaceAll(params.Config, "$", "$$")))
 	keys := make([]string, 0, len(params.Env))
 	for k := range params.Env {
 		keys = append(keys, k)

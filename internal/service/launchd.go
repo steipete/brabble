@@ -18,10 +18,9 @@ const launchdTemplate = `<?xml version='1.0' encoding='UTF-8'?>
   <key>ProgramArguments</key>
   <array>
     <string>{{xml .Binary}}</string>
-    <string>start</string>
+    <string>serve</string>
     <string>--config</string>
     <string>{{xml .Config}}</string>
-    <string>--foreground</string>
   </array>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict>

@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -44,5 +45,37 @@ func TestWritePlistRestrictsPermissionsAndEscapesValues(t *testing.T) {
 	}
 	if bytes.Contains(data, []byte("private&value")) || !bytes.Contains(data, []byte("private&amp;value")) {
 		t.Fatalf("plist value was not XML-escaped: %s", data)
+	}
+	if bytes.Contains(data, []byte("--foreground")) {
+		t.Fatalf("plist still passes --foreground: %s", data)
+	}
+	if !bytes.Contains(data, []byte("<string>serve</string>")) {
+		t.Fatalf("plist = %s; want serve", data)
+	}
+}
+
+func TestWritePlistRunsServe(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	configPath := filepath.Join(home, "brabble.toml")
+	path, err := WritePlist(LaunchdParams{
+		Label:  "com.example.brabble",
+		Binary: "/tmp/brabble",
+		Config: configPath,
+		Log:    filepath.Join(home, "brabble.log"),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(data)
+	if strings.Contains(text, "--foreground") {
+		t.Fatalf("plist still passes --foreground:\n%s", text)
+	}
+	if !strings.Contains(text, "<string>serve</string>") {
+		t.Fatalf("plist = %s; want serve", text)
 	}
 }
