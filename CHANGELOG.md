@@ -6,8 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Fixed
-- `start` keeps the parent environment when `--no-wake` or `--metrics-addr` is set.
-- Installed service units run `serve` instead of `start --foreground`.
+- `start` keeps the parent environment when `--no-wake` or `--metrics-addr` is set. Thanks @SebTardif.
+- Installed service units run `serve` instead of `start --foreground`. Thanks @SebTardif.
 
 ## [0.1.4] - 2026-10-20
 

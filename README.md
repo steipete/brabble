@@ -27,7 +27,7 @@ service output. Select/download a model before starting the service.
 - `setup` — download default model and update config; `doctor` — check deps/model/hook/portaudio.
 - `test-hook "text"` — invoke hook manually; `health` — ping daemon; `service install|uninstall|status` — launchd helper (prints kickstart/bootout commands).
 - `transcribe <wav>` — run whisper on a WAV file; add `--hook` to send it through your configured hook (respects wake/min_chars unless `--no-wake`).
-- Hidden internal: `serve` runs the foreground daemon (used by `start`/launchd).
+- Hidden internal: `serve` runs the foreground daemon (used by `start`, launchd, and systemd). Runtime flags on `start` preserve the inherited environment, including `HOME` and `PATH`.
 - `--metrics-addr` enables Prometheus text endpoint; `--no-wake` bypasses wake word.
 
 ## PNPM helpers (all build Go, no JS runtime)
