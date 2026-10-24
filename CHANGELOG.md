@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-10-23
+
+**Highlights:** Preserve the startup environment and keep installed services in the foreground.
+
 ### Fixed
 - `start` keeps the parent environment when `--no-wake` or `--metrics-addr` is set. Thanks @SebTardif.
 - Installed service units run `serve` instead of `start --foreground`. Thanks @SebTardif.
@@ -65,7 +69,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Doctor checks deps/model/portaudio; service command writes launchd plist with env; health check.
 - Rich, colored Go help output with examples; pnpm scripts for build/run.
 
-[Unreleased]: https://github.com/steipete/brabble/compare/v0.1.4...HEAD
+[Unreleased]: https://github.com/steipete/brabble/compare/v0.1.5...HEAD
+[0.1.5]: https://github.com/steipete/brabble/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/steipete/brabble/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/steipete/brabble/releases/tag/v0.1.3
 [0.1.2]: https://github.com/steipete/brabble/releases/tag/v0.1.2
