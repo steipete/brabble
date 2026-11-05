@@ -67,18 +67,37 @@ func readWAV16kMono(path string) ([]float32, error) {
 	if ch < 1 {
 		return nil, fmt.Errorf("no channels in wav")
 	}
+	bitDepth := buf.SourceBitDepth
+	scale, err := wavFullScale(bitDepth)
+	if err != nil {
+		return nil, err
+	}
 	frames := len(buf.Data) / ch
 	mono := make([]float32, frames)
 	for i := 0; i < frames; i++ {
-		var sum int
+		var sum int64
 		for c := 0; c < ch; c++ {
-			sum += int(buf.Data[i*ch+c])
+			sample := int64(buf.Data[i*ch+c])
+			// 8-bit WAV PCM is unsigned, with 128 at silence.
+			if bitDepth == 8 {
+				sample -= 128
+			}
+			sum += sample
 		}
-		mono[i] = float32(sum) / float32(ch) / float32(1<<15)
+		mono[i] = float32(sum) / float32(ch) / scale
 	}
 	const targetSR = 16000
 	if srcSR == targetSR {
 		return mono, nil
 	}
 	return resampleLinear(mono, srcSR, targetSR), nil
+}
+
+func wavFullScale(bitDepth int) (float32, error) {
+	switch bitDepth {
+	case 8, 16, 24, 32:
+		return float32(uint64(1) << uint(bitDepth-1)), nil
+	default:
+		return 0, fmt.Errorf("unsupported wav bit depth %d", bitDepth)
+	}
 }

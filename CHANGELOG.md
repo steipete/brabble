@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+- `transcribe` scales WAV samples by their bit depth and centers unsigned 8-bit audio.
+
 ## [0.1.5] - 2026-10-23
 
 **Highlights:** Preserve the startup environment and keep installed services in the foreground.

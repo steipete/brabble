@@ -90,3 +90,85 @@ func TestReadWAV16kMonoResamples(t *testing.T) {
 		t.Fatalf("expected some energy after resample, got all zeros")
 	}
 }
+
+func TestReadWAV16kMonoScalesByBitDepth(t *testing.T) {
+	cases := []struct {
+		name     string
+		bitDepth int
+		samples  []int
+		want     []float32
+	}{
+		{
+			name:     "16-bit signed",
+			bitDepth: 16,
+			samples:  []int{16384, -16384, 0},
+			want:     []float32{0.5, -0.5, 0},
+		},
+		{
+			name:     "8-bit unsigned",
+			bitDepth: 8,
+			samples:  []int{128, 192, 255, 0},
+			want:     []float32{0, 0.5, 127.0 / 128.0, -1},
+		},
+		{
+			name:     "24-bit signed",
+			bitDepth: 24,
+			samples:  []int{1 << 22, -(1 << 22), 0},
+			want:     []float32{0.5, -0.5, 0},
+		},
+		{
+			name:     "32-bit signed",
+			bitDepth: 32,
+			samples:  []int{1 << 30, -(1 << 30), 0},
+			want:     []float32{0.5, -0.5, 0},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			path := writePCMWav(t, tc.bitDepth, 1, 16000, tc.samples)
+			got, err := readWAV16kMono(path)
+			if err != nil {
+				t.Fatalf("read: %v", err)
+			}
+			if len(got) != len(tc.want) {
+				t.Fatalf("len %d, want %d (%v)", len(got), len(tc.want), got)
+			}
+			for i := range tc.want {
+				if !nearFloat32(got[i], tc.want[i]) {
+					t.Fatalf("sample %d = %g, want %g (all %v)", i, got[i], tc.want[i], got)
+				}
+			}
+		})
+	}
+}
+
+func writePCMWav(t *testing.T, bitDepth, channels, sampleRate int, samples []int) string {
+	t.Helper()
+	path := t.TempDir() + "/clip.wav"
+	f, err := os.Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = f.Close() })
+	buf := &audio.IntBuffer{
+		Data:           samples,
+		Format:         &audio.Format{SampleRate: sampleRate, NumChannels: channels},
+		SourceBitDepth: bitDepth,
+	}
+	enc := wav.NewEncoder(f, sampleRate, bitDepth, channels, 1)
+	if err := enc.Write(buf); err != nil {
+		t.Fatal(err)
+	}
+	if err := enc.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return path
+}
+
+func nearFloat32(got, want float32) bool {
+	diff := got - want
+	if diff < 0 {
+		diff = -diff
+	}
+	return diff < 0.0001
+}
