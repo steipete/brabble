@@ -2,7 +2,10 @@ package control
 
 import (
 	"os"
+	"strings"
 	"testing"
+
+	"brabble/internal/config"
 
 	"github.com/go-audio/audio"
 	"github.com/go-audio/wav"
@@ -21,10 +24,75 @@ func TestRemoveWakeWordLocal(t *testing.T) {
 		{"no wake here", "clawd", "no wake here"},
 	}
 	for _, c := range cases {
-		if got := removeWakeWordLocal(c.text, c.word); got != c.expect {
+		if got := removeWakeWordLocal(c.text, c.word, nil); got != c.expect {
 			t.Fatalf("removeWakeWordLocal(%q)=%q want %q", c.text, got, c.expect)
 		}
 	}
+}
+
+func TestGateWakeTextUsesAliases(t *testing.T) {
+	cfg, err := config.Default()
+	if err != nil {
+		t.Fatalf("default config: %v", err)
+	}
+	if len(cfg.Wake.Aliases) == 0 || !strings.EqualFold(cfg.Wake.Aliases[0], "claude") {
+		t.Fatalf("default aliases = %v, want claude", cfg.Wake.Aliases)
+	}
+
+	t.Run("alias only", func(t *testing.T) {
+		got, err := gateWakeText("claude open the door", cfg.Wake.Word, cfg.Wake.Aliases, cfg.Wake.Enabled, false)
+		if err != nil {
+			t.Fatalf("alias-only transcript rejected: %v", err)
+		}
+		if got != "open the door" {
+			t.Fatalf("alias-only hook text = %q", got)
+		}
+	})
+
+	t.Run("alias and word", func(t *testing.T) {
+		got, err := gateWakeText("claude, clawd open the door", cfg.Wake.Word, cfg.Wake.Aliases, cfg.Wake.Enabled, false)
+		if err != nil {
+			t.Fatalf("alias plus word rejected: %v", err)
+		}
+		if got != "clawd open the door" {
+			t.Fatalf("hook text kept the alias: %q", got)
+		}
+	})
+
+	t.Run("primary word", func(t *testing.T) {
+		got, err := gateWakeText("clawd open the door", cfg.Wake.Word, cfg.Wake.Aliases, true, false)
+		if err != nil || got != "open the door" {
+			t.Fatalf("primary word: text=%q err=%v", got, err)
+		}
+	})
+
+	t.Run("missing wake", func(t *testing.T) {
+		_, err := gateWakeText("open the door", cfg.Wake.Word, cfg.Wake.Aliases, true, false)
+		if err == nil {
+			t.Fatal("expected missing wake word to fail")
+		}
+	})
+
+	t.Run("no-wake", func(t *testing.T) {
+		got, err := gateWakeText("open the door", cfg.Wake.Word, cfg.Wake.Aliases, true, true)
+		if err != nil || got != "open the door" {
+			t.Fatalf("no-wake: text=%q err=%v", got, err)
+		}
+	})
+
+	t.Run("wake disabled", func(t *testing.T) {
+		got, err := gateWakeText("claude open the door", "clawd", []string{"claude"}, false, false)
+		if err != nil || got != "claude open the door" {
+			t.Fatalf("disabled wake: text=%q err=%v", got, err)
+		}
+	})
+
+	t.Run("blank alias", func(t *testing.T) {
+		_, err := gateWakeText("open the door", "clawd", []string{" ", ""}, true, false)
+		if err == nil {
+			t.Fatal("blank alias matched every transcript")
+		}
+	})
 }
 
 func TestResampleLinearLength(t *testing.T) {

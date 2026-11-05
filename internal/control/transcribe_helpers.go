@@ -8,19 +8,61 @@ import (
 	"github.com/go-audio/wav"
 )
 
-func removeWakeWordLocal(text, word string) string {
-	lw := strings.ToLower(word)
+func removeWakeWordLocal(text, word string, aliases []string) string {
+	variants := wakeWordVariants(word, aliases)
 	fields := strings.Fields(text)
 	out := make([]string, 0, len(fields))
 	skipped := false
 	for _, f := range fields {
-		if !skipped && strings.EqualFold(strings.Trim(f, " ,.!?;:\"'"), lw) {
+		if !skipped && fieldIsWake(f, variants) {
 			skipped = true
 			continue
 		}
 		out = append(out, f)
 	}
 	return strings.Join(out, " ")
+}
+
+func gateWakeText(txt, word string, aliases []string, enabled, noWake bool) (string, error) {
+	if enabled && !noWake && !textHasWake(txt, word, aliases) {
+		return "", fmt.Errorf("wake word %q not found; use --no-wake to override", word)
+	}
+	if enabled && !noWake {
+		txt = removeWakeWordLocal(txt, word, aliases)
+	}
+	return txt, nil
+}
+
+func textHasWake(text, word string, aliases []string) bool {
+	lower := strings.ToLower(text)
+	for _, variant := range wakeWordVariants(word, aliases) {
+		if strings.Contains(lower, variant) {
+			return true
+		}
+	}
+	return false
+}
+
+func wakeWordVariants(word string, aliases []string) []string {
+	variants := []string{strings.ToLower(word)}
+	for _, alias := range aliases {
+		alias = strings.ToLower(strings.TrimSpace(alias))
+		if alias == "" {
+			continue
+		}
+		variants = append(variants, alias)
+	}
+	return variants
+}
+
+func fieldIsWake(field string, variants []string) bool {
+	trimmed := strings.Trim(field, " ,.!?;:\"'")
+	for _, variant := range variants {
+		if strings.EqualFold(trimmed, variant) {
+			return true
+		}
+	}
+	return false
 }
 
 func resampleLinear(in []float32, srcSR, dstSR int) []float32 {
