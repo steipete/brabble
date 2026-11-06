@@ -159,7 +159,7 @@ func waitForDaemonReady(pidPath string, proc *os.Process, attempts int, interval
 	if err := readyOrWaiting(pidPath, proc); err == nil || !errors.Is(err, errDaemonNotReady) {
 		return err
 	}
-	return fmt.Errorf("brabble did not write pid file %s (pid %d still running)", pidPath, proc.Pid)
+	return fmt.Errorf("brabble did not write pid file %s (pid %d still running); brabble stop and status cannot see it, so stop pid %d before retrying", pidPath, proc.Pid, proc.Pid)
 }
 
 var errDaemonNotReady = errors.New("brabble pid file not written yet")

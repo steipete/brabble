@@ -62,8 +62,13 @@ func TestWaitForDaemonReadyErrorsWhenPidFileMissing(t *testing.T) {
 	t.Cleanup(func() { stopCmd(cmd) })
 
 	err := waitForDaemonReady(t.TempDir()+"/missing.pid", cmd.Process, 2, time.Millisecond)
-	if err == nil || !strings.Contains(err.Error(), "pid file") {
-		t.Fatalf("expected missing pid file error, got %v", err)
+	if err == nil {
+		t.Fatal("expected missing pid file error")
+	}
+	msg := err.Error()
+	wantStop := fmt.Sprintf("stop pid %d before retrying", cmd.Process.Pid)
+	if !strings.Contains(msg, "pid file") || !strings.Contains(msg, "stop and status cannot see it") || !strings.Contains(msg, wantStop) {
+		t.Fatalf("expected missing pid file error telling the operator to stop the child, got %v", err)
 	}
 }
 
