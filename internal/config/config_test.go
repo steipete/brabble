@@ -5,6 +5,16 @@ import (
 	"testing"
 )
 
+func TestDefaultDeviceIndexIsUnset(t *testing.T) {
+	cfg, err := Default()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Audio.DeviceIndex != -1 {
+		t.Fatalf("DeviceIndex = %d, want -1", cfg.Audio.DeviceIndex)
+	}
+}
+
 func TestEnvOverrides(t *testing.T) {
 	cfg, err := Default()
 	if err != nil {

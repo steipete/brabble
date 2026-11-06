@@ -123,6 +123,7 @@ func Default() (*Config, error) {
 	cfg.Audio.SampleRate = 16000
 	cfg.Audio.Channels = 1
 	cfg.Audio.FrameMS = 20
+	cfg.Audio.DeviceIndex = -1
 
 	cfg.VAD.Enabled = true
 	cfg.VAD.SilenceMS = defaultSilenceMS
