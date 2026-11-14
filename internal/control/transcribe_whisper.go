@@ -50,11 +50,9 @@ func NewTranscribeCmd(cfgPath *string) *cobra.Command {
 			}
 
 			// Apply wake/min_chars gating like daemon.
-			if cfg.Wake.Enabled && !noWake && !strings.Contains(strings.ToLower(txt), strings.ToLower(cfg.Wake.Word)) {
-				return fmt.Errorf("wake word %q not found; use --no-wake to override", cfg.Wake.Word)
-			}
-			if cfg.Wake.Enabled && !noWake {
-				txt = removeWakeWordLocal(txt, cfg.Wake.Word)
+			txt, err = gateWakeText(txt, cfg.Wake.Word, cfg.Wake.Aliases, cfg.Wake.Enabled, noWake)
+			if err != nil {
+				return err
 			}
 			hk, _ := hook.SelectHookConfig(cfg, rawTxt)
 			if hk == nil {
