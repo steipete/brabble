@@ -2,7 +2,7 @@ module brabble
 
 go 1.27.0
 
-toolchain go1.27.3
+toolchain go1.27.4
 
 require (
 	github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20260831035357-eacbd8234c66
@@ -19,6 +19,6 @@ require (
 require (
 	github.com/go-audio/riff v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/spf13/pflag v1.0.10 // indirect
+	github.com/spf13/pflag v1.1.0 // indirect
 	github.com/stretchr/testify v1.12.1 // indirect
 )
