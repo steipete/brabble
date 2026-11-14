@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -43,14 +44,9 @@ func NewStartCmd(cfgPath *string) *cobra.Command {
 			if err := child.Start(); err != nil {
 				return err
 			}
-			// Wait a moment and confirm pid file appears.
-			waited := 0
-			for waited < 20 {
-				if _, err := os.Stat(cfg.Paths.PidPath); err == nil {
-					break
-				}
-				time.Sleep(100 * time.Millisecond)
-				waited++
+			// Wait a moment and confirm the child stayed up and wrote its pid file.
+			if err := waitForDaemonReady(cfg.Paths.PidPath, child.Process, startReadyAttempts, startReadyInterval); err != nil {
+				return err
 			}
 			fmt.Printf("brabble started (pid %d)\n", child.Process.Pid)
 			return nil
@@ -138,6 +134,69 @@ func NewRestartCmd(cfgPath *string) *cobra.Command {
 			return startCmd.RunE(startCmd, args)
 		},
 	}
+}
+
+const (
+	startReadyAttempts = 20
+	startReadyInterval = 100 * time.Millisecond
+)
+
+// waitForDaemonReady reports an error when proc has exited or pidPath is still
+// missing after attempts of interval. A live child is not reaped.
+func waitForDaemonReady(pidPath string, proc *os.Process, attempts int, interval time.Duration) error {
+	if proc == nil {
+		return fmt.Errorf("brabble process missing")
+	}
+	if attempts < 1 {
+		attempts = 1
+	}
+	for waited := 0; waited < attempts; waited++ {
+		if err := readyOrWaiting(pidPath, proc); err == nil || !errors.Is(err, errDaemonNotReady) {
+			return err
+		}
+		time.Sleep(interval)
+	}
+	if err := readyOrWaiting(pidPath, proc); err == nil || !errors.Is(err, errDaemonNotReady) {
+		return err
+	}
+	return fmt.Errorf("brabble did not write pid file %s (pid %d still running); brabble stop and status cannot see it, so stop pid %d before retrying", pidPath, proc.Pid, proc.Pid)
+}
+
+var errDaemonNotReady = errors.New("brabble pid file not written yet")
+
+func readyOrWaiting(pidPath string, proc *os.Process) error {
+	if err := exitedChild(proc); err != nil {
+		return err
+	}
+	if _, err := os.Stat(pidPath); err != nil {
+		return errDaemonNotReady
+	}
+	return exitedChild(proc)
+}
+
+func exitedChild(proc *os.Process) error {
+	var ws syscall.WaitStatus
+	var wpid int
+	var err error
+	for {
+		wpid, err = syscall.Wait4(proc.Pid, &ws, syscall.WNOHANG, nil)
+		if !errors.Is(err, syscall.EINTR) {
+			break
+		}
+	}
+	if errors.Is(err, syscall.ECHILD) {
+		return fmt.Errorf("brabble exited before it became ready")
+	}
+	if err != nil {
+		return fmt.Errorf("check brabble process: %w", err)
+	}
+	if wpid == 0 {
+		return nil
+	}
+	if ws.Signaled() {
+		return fmt.Errorf("brabble exited before it became ready (signal %s)", ws.Signal())
+	}
+	return fmt.Errorf("brabble exited before it became ready (exit status %d)", ws.ExitStatus())
 }
 
 func ensureNotRunning(cfg *config.Config) error {

@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+- `start` returns an error when the daemon exits or never writes its pid file. If that child is still running, the error says to stop its pid before retrying.
+
 ## [0.1.5] - 2026-10-23
 
 **Highlights:** Preserve the startup environment and keep installed services in the foreground.
