@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
 ## [0.1.6] - 2026-11-15
 
 **Highlights:** Correct WAV transcription across PCM bit depths, honor wake aliases, report failed daemon startup, and fix GO-2026-6859 in release binaries.
@@ -77,6 +79,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Doctor checks deps/model/portaudio; service command writes launchd plist with env; health check.
 - Rich, colored Go help output with examples; pnpm scripts for build/run.
 
+[Unreleased]: https://github.com/steipete/brabble/compare/v0.1.6...HEAD
 [0.1.6]: https://github.com/steipete/brabble/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/steipete/brabble/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/steipete/brabble/compare/v0.1.3...v0.1.4
