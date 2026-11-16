@@ -3,14 +3,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.6] - 2026-11-15
+
+**Highlights:** Correct WAV transcription across PCM bit depths, honor wake aliases, report failed daemon startup, and fix GO-2026-6859 in release binaries.
 
 ### Fixed
 - Normalize 8-, 16-, 24-, and 32-bit PCM WAV samples at their source bit depth. Thanks @SebTardif.
 - Honor configured wake aliases in file transcription hooks. Thanks @SebTardif.
-- Build with Go 1.27.4 to address GO-2026-6859 while retaining the Go 1.27.0 source minimum.
-
 - `start` returns an error when the daemon exits or never writes its pid file. If that child is still running, the error says to stop its pid before retrying. Thanks @SebTardif.
+- Build with Go 1.27.4 to address GO-2026-6859 while retaining the Go 1.27.0 source minimum.
 
 ## [0.1.5] - 2026-10-23
 
@@ -76,7 +77,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Doctor checks deps/model/portaudio; service command writes launchd plist with env; health check.
 - Rich, colored Go help output with examples; pnpm scripts for build/run.
 
-[Unreleased]: https://github.com/steipete/brabble/compare/v0.1.5...HEAD
+[0.1.6]: https://github.com/steipete/brabble/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/steipete/brabble/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/steipete/brabble/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/steipete/brabble/releases/tag/v0.1.3
